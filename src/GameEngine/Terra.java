@@ -20,9 +20,10 @@ import oracle.jrockit.jfr.events.Bits;
  */
 public class Terra {
 
+    //things are a little bit fucked up with functions below, so instead of p.x,p.y reverse is used for now
     private static int calculateMinHeuristicDistance(Point p1, Point p2) {
-        return OffsetCoord.qoffsetToCube(new OffsetCoord(p1.x, p1.y))
-                .distance(OffsetCoord.qoffsetToCube(new OffsetCoord(p2.x, p2.y)));
+        return OffsetCoord.qoffsetToCube(new OffsetCoord(p1.y, p1.x))
+                .distance(OffsetCoord.qoffsetToCube(new OffsetCoord(p2.y, p2.x)));
     }
     
     private Faction owner;
@@ -50,13 +51,11 @@ public class Terra {
         boolean[][] visitBitMap = new boolean[map.length][map[0].length];
         ArrayList<Point> visitQueue = new ArrayList<>();
         ArrayList<Point> resultPath = new ArrayList<>();
-        
-        int t = startingPoint.x; startingPoint.x = startingPoint.y; startingPoint.y=t;
+        GenericMath.swapPoint(startingPoint);
         visitQueue.add(startingPoint);
         visitBitMap[startingPoint.y][startingPoint.x] = true;
         int breadthFirstBorder = 1;
         
-        //p.y is assumed to be row, p.x is column
         do{
             //picks a random path from within the nodes with same distance to the source
             Point p = visitQueue.remove(r.nextInt(breadthFirstBorder--));
@@ -64,12 +63,10 @@ public class Terra {
                 resultPath.add(p);
                 break;
             }
-            System.out.println(p);
             Point[] neighbours = getNeighbourArrayIndeces(p.y, p.x, map);
-            System.out.println(visitQueue.toString());
             for(Point n: neighbours){
                 if(n!=null)
-                    {t = n.x; n.x = n.y; n.y=t;}
+                    GenericMath.swapPoint(n);
                 if(n!=null && !visitBitMap[n.y][n.x] && passableCondition.apply(map[n.y][n.x])){
                     visitQueue.add(n);
                     visitBitMap[n.y][n.x] = true;
@@ -84,7 +81,6 @@ public class Terra {
         else{
             reconstructResult(resultConstructor, resultPath);
         }
-        System.out.println("result is " + resultPath);
         return resultPath;
     }
     
@@ -96,6 +92,7 @@ public class Terra {
         int[][] distanceMap = new int[map.length][map[0].length];
         ArrayList<Point> visitQueue = new ArrayList<>();
         ArrayList<Point> resultPath = new ArrayList<>();
+        GenericMath.swapPoint(startingPoint);
         visitQueue.add(startingPoint);
         distanceMap[startingPoint.y][startingPoint.x] = 1;
         //starting point starts with an arbitrary distance of 1
@@ -118,6 +115,8 @@ public class Terra {
             }
             Point[] neighbours = getNeighbourArrayIndeces(p.y, p.x, map);
             for(Point n: neighbours){
+                if(n!=null)
+                    GenericMath.swapPoint(n);
                 if(n!=null && distanceMap[n.y][n.x]==0 && passableCondition.apply(map[n.y][n.x])){
                     boolean insertedFlag = false;
                     for(int i = 0; i < visitQueue.size(); i++){
@@ -127,6 +126,7 @@ public class Terra {
                         {
                             visitQueue.add(i, n);
                             insertedFlag = true;
+                            break;
                         }
                     }
                     if(!insertedFlag)

@@ -5,6 +5,7 @@
  */
 package GameEngine;
 
+import java.awt.Point;
 import java.util.Random;
 
 /**
@@ -35,4 +36,10 @@ public class GenericMath {
             arr[i] /= sum;
     }
     
+    public static void swapPoint(Point n) {
+        int t;
+        t = n.x;
+        n.x = n.y;
+        n.y=t;
+    }
 }
