@@ -150,15 +150,17 @@ public class Terra {
             resultPath.add(resultConstructor[resultPath.get(resultPath.size()-1).y][resultPath.get(resultPath.size()-1).x]);
     }
     
-    public void draw(GraphicsContext gc, int x, int y, int edgeLength){
-        drawTerrain(gc, x , y); 
-        if(producedResource!=null){
+    public void draw(GraphicsContext gc, int x, int y, int edgeLength, boolean[] displaySettings){
+        drawTerrain(gc, x , y, edgeLength); 
+        if(displaySettings[0] && producedResource!=null){
             producedResource.draw(gc, x, y, edgeLength);
         }
     }
 
-    protected void drawTerrain(GraphicsContext gc, int x, int y) {
-        gc.drawImage(new Image("files/terrain/" + getTerrain().toString().toLowerCase()+ ".png"), x, y );
+    protected void drawTerrain(GraphicsContext gc, int x, int y, int edgeLength) {
+        gc.drawImage(new Image(
+                "files/terrain/" + getTerrain().toString().toLowerCase()+ ".png", edgeLength*2, edgeLength*2, true, true),
+                x, y );
     }
 
     public Faction getOwner() {

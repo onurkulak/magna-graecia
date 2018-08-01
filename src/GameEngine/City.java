@@ -25,8 +25,8 @@ public class City extends Province{
     }
 
     @Override
-    public void draw(GraphicsContext gc, int x, int y, int edgeLength) {
-        super.draw(gc, x, y, edgeLength);
+    public void draw(GraphicsContext gc, int x, int y, int edgeLength, boolean[] displaySettings) {
+        super.draw(gc, x, y, edgeLength, displaySettings);
         gc.drawImage(new Image("files/terrain/city/" + getTerrain().toString().toLowerCase()+ ".png", 
                 edgeLength*2, edgeLength*2, false, true), x, y ); 
     }

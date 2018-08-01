@@ -36,8 +36,8 @@ public class Province extends Terra{
         setPopulation(0);
     }
     
-    public void draw(GraphicsContext gc, int x, int y, int edgeLength){
-        super.draw(gc, x, y, edgeLength);
+    public void draw(GraphicsContext gc, int x, int y, int edgeLength, boolean[] displaySettings){
+        super.draw(gc, x, y, edgeLength, displaySettings);
     }
     
     public Province(Terra[] neighbours, TerrainType regionTerrain, Resource regionResource, 
