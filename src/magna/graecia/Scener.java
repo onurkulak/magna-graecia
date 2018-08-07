@@ -10,6 +10,7 @@ import GameEngine.Game;
 import GameEngine.Province;
 import GameEngine.Settings;
 import GameEngine.Terra;
+import GameEngine.Layout;
 import java.io.FileNotFoundException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,6 +41,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import java.awt.Point;
+import javafx.scene.input.MouseEvent;
 
 /**
  *
@@ -52,6 +54,7 @@ public class Scener {
     /*
      first is show resources, second is show borders, third is show armies, forth is population
      */
+    private static Layout smallMapHexLayout;
     private final static int paddingCoefficient = 2;
     private final static boolean[] smallMapDisplaySettings = new boolean[4];
     private final static String menuBackground = "/files/bg/menu.jpg";
@@ -251,7 +254,16 @@ public class Scener {
         drawSmallMapCanvas(openGame, gc);
         sp.setContent(canvas);
         bp.setCenter(sp);
-
+        canvas.setOnMouseClicked(new EventHandler<MouseEvent>()
+        {
+            public void handle(MouseEvent e)
+            {
+                System.out.println(e.getX() + " " + e.getY());
+                System.out.println(smallMapHexLayout.pixelToHex(e.getX(), e.getY()).x);
+                System.out.println(smallMapHexLayout.pixelToHex(e.getX(), e.getY()).y);
+            }
+        });
+        
         Slider zoom = new Slider(18, 360, edgeLength);
         zoom.valueProperty().addListener(new ChangeListener() {
             @Override
@@ -291,6 +303,8 @@ public class Scener {
         double graphicalHeight = (openGame.smallMap[0].length * 2 + 1 + paddingCoefficient) * edgeLength;
         gc.getCanvas().setWidth(graphicalWidth);
         gc.getCanvas().setHeight(graphicalHeight);
+        smallMapHexLayout = new Layout(Layout.flat, edgeLength, edgeLength * 2 / Math.sqrt(3),
+                edgeLength*paddingCoefficient/2 , edgeLength*paddingCoefficient/2);
         
         //add padding
         gc.getCanvas().setTranslateX(edgeLength*paddingCoefficient/2);
