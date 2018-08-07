@@ -72,7 +72,8 @@ public class Game {
         
         createSmallMapBorderTerrains(smallMapEdge, p, largeMapEdge);
         createCitiesAndSeas(largeMapEdge, p, smallMapEdge);
-        
+        Faction f = new AIFaction();
+        Faction f2 = new AIFaction();
         for (int i = 0; i < smallMap.length; i++) {
             for (int j = 0; j < smallMap[0].length; j++) {
                 if(smallMap[i][j]==null)
@@ -84,9 +85,9 @@ public class Game {
                             (i/smallLargeProportion + p.x +.0) / largeMapEdge, seed, 
                             provinceNames[seed.nextInt(provinceNames.length)], resources,
                             j,i);
-                System.out.print(smallMap[i][j].getTerrain()+ "\t");
+                //System.out.print(smallMap[i][j].getTerrain()+ "\t");
             }
-            System.out.println();
+            //System.out.println();
         }
     }
     private double getProvinceRegionTerrainSimilarity(){
@@ -196,9 +197,9 @@ public class Game {
                         regionNames[seed.nextInt(regionNames.length)],
                         (double)j / largeMap.length, Terra.getNeighbours(j, i, largeMap), Terra.TerrainType.PLAIN, 
                         getTerrainSimilarityCoefficient(setup), getResourceSimilarityCoefficient(), seed, resources, j, i);
-                System.out.print(largeMap[i][j].getTerrain()+ "\t");
+                //System.out.print(largeMap[i][j].getTerrain()+ "\t");
             }
-            System.out.println();
+            //System.out.println();
         }
     }
 
@@ -253,7 +254,7 @@ public class Game {
         return false;
     }
 
-    private boolean isLand(Region r) {
+    private boolean isLand(Terra r) {
         return r.getTerrain() != Terra.TerrainType.SEA;
     }
 

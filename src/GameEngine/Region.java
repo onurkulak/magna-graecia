@@ -33,8 +33,8 @@ public class Region extends Terra{
             }
             else terrainProbs[neighbours[i].getTerrain().ordinal()] += terrainSimilarityCoefficient / neighbours.length;
         }
-        GenericMath.normalizeArray(terrainProbs);
-        setTerrain(GenericMath.getSample(TerrainType.values(), terrainProbs, seed));
+        GM.normalizeArray(terrainProbs);
+        setTerrain(GM.getSample(TerrainType.values(), terrainProbs, seed));
         setName(name);
         
         decideResource(neighbours, resourceSimilarityCoefficient, resources, seed);

@@ -7,70 +7,84 @@ package GameEngine;
 
 import java.util.Random;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
+
 /**
  *
  * @author onur
  */
-public class Province extends Terra{
+public class Province extends Terra {
+
     private Force military;
     private int population;
+    private static final String[] borderPostfixes = new String[]{
+        "tr", "r", "br", "bl", "l", "tl"
+    };
+    //these values should be multipleied with edgelength to get true x-y drawing coordinate offsets
+    //they should be subtracted from the given x,y pixels of the hex while drawing walls
+    private static final double[][] edgeOffsets = new double[][]{
+        {0, 2}, {0, 2}, {0, 0}, {1.5, 1}, {1.5, 1}, {1.5, 3}
+    };
+    private static final String pathtoBorderGraphics = "files/terrain/wall/castle-";
 
     public Province(int x, int y) {
-        super(x,y);
+        super(x, y);
         setPopulation(0);
     }
 
     public Province(TerrainType t, Resource r, int pop, int x, int y) {
         //initial settlements around the city
-        super(x,y);
+        super(x, y);
         setTerrain(t);
         setProducedResource(r);
         setPopulation(pop);
     }
-    
+
     public Province(TerrainType t, Random seed, Resources r, int x, int y) {
         //newly created province, without neighbour effect
-        super(x,y);
+        super(x, y);
         setTerrain(t);
         setProducedResource(getRandomResorceForTerrain(t, seed, r));
         setPopulation(0);
     }
-    
-    public void draw(GraphicsContext gc, int x, int y, int edgeLength, boolean[] displaySettings){
+
+    public void draw(GraphicsContext gc, int x, int y, int edgeLength, boolean[] displaySettings) {
         super.draw(gc, x, y, edgeLength, displaySettings);
     }
-    
-    public Province(Terra[] neighbours, TerrainType regionTerrain, Resource regionResource, 
-            double provinceRegionTerrainSim, double provinceRegionResourceSim, 
-            double provinceNeighboursTerrainSim, double provinceNeighboursResourceSim, 
+
+    public Province(Terra[] neighbours, TerrainType regionTerrain, Resource regionResource,
+            double provinceRegionTerrainSim, double provinceRegionResourceSim,
+            double provinceNeighboursTerrainSim, double provinceNeighboursResourceSim,
             double latitude, Random seed, String name, Resources resources, int x, int y) {
-        super(x,y);
+        super(x, y);
         terrainProbs = new double[]{
-        //SEA, DESERT, PLAIN, GRASS, FOREST, HILL
-        //default probabilities
-        1.2, 0.1, 0.1, 0.15, 0.15, 0.20
+            //SEA, DESERT, PLAIN, GRASS, FOREST, HILL
+            //default probabilities
+            1.2, 0.1, 0.1, 0.15, 0.15, 0.20
         };
         latitudeConfiguration(latitude);
         //procedural province generation
-        for(int i = 0; i < terrainProbs.length; i++)
+        for (int i = 0; i < terrainProbs.length; i++) {
             terrainProbs[i] *= 1 - provinceRegionTerrainSim - provinceNeighboursTerrainSim;
+        }
         terrainProbs[regionTerrain.ordinal()] += provinceRegionTerrainSim;
         for (Terra neighbour : neighbours) {
             if (neighbour != null) {
                 terrainProbs[neighbour.getTerrain().ordinal()] += provinceNeighboursTerrainSim / neighbours.length;
             }
         }
-        GenericMath.normalizeArray(terrainProbs);
-        setTerrain(GenericMath.getSample(TerrainType.values(), terrainProbs));
+        GM.normalizeArray(terrainProbs);
+        setTerrain(GM.getSample(TerrainType.values(), terrainProbs));
         setName(name);
-        
-        if(seed.nextDouble() < provinceRegionResourceSim)
+
+        if (seed.nextDouble() < provinceRegionResourceSim) {
             setProducedResource(regionResource);
-        else decideResource(neighbours, provinceNeighboursResourceSim, resources, seed);
+        } else {
+            decideResource(neighbours, provinceNeighboursResourceSim, resources, seed);
+        }
         setPopulation(0);
     }
-    
-    
+
     public Force getMilitary() {
         return military;
     }
@@ -84,13 +98,37 @@ public class Province extends Terra{
     }
 
     private void setPopulation(int population) {
-        if(TerrainType.SEA == getTerrain()){
+        if (TerrainType.SEA == getTerrain()) {
             this.population = 0;
-            if(population > 0)
+            if (population > 0) {
                 System.out.println("trying to set positive sea population");
+            }
+        } else {
+            this.population = population;
         }
-        else    this.population = population;
     }
 
-    
+    //i = 0 is top right, 1 is right etc. clockwise
+    public static boolean drawGivenBorders(Terra[] nb, Province centerProvince, 
+            int checkedNeighbours, GraphicsContext gc, int edgeLength, int x, int y) {
+        String p = null;
+        if (!isTerraIncognita(nb[checkedNeighbours]) && !isTerraIncognita(nb[(checkedNeighbours + 1) % 6])
+                && nb[checkedNeighbours].getOwner() == nb[(checkedNeighbours + 1) % 6].getOwner()
+                && (isTerraIncognita(centerProvince) || nb[checkedNeighbours].getOwner() != centerProvince.getOwner())){
+            p = "concave-";
+        } else if (!isTerraIncognita(centerProvince)
+                && (isTerraIncognita(nb[checkedNeighbours]) || centerProvince.getOwner() != nb[checkedNeighbours].getOwner())
+                && (isTerraIncognita(nb[(checkedNeighbours + 1) % 6]) || centerProvince.getOwner() != nb[(checkedNeighbours + 1) % 6].getOwner())) {
+            p = "convex-";
+        }
+        if (p == null) {
+            return false;
+        }
+        p += borderPostfixes[checkedNeighbours];
+        p = pathtoBorderGraphics + p + ".png";
+        gc.drawImage(new Image(
+                p, edgeLength / 18 * 63, 0, true, true),
+                x - edgeLength * edgeOffsets[checkedNeighbours][0], y - edgeLength * edgeOffsets[checkedNeighbours][1]);
+        return true;
+    }
 }

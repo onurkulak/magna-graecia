@@ -51,7 +51,7 @@ public class Terra {
         boolean[][] visitBitMap = new boolean[map.length][map[0].length];
         ArrayList<Point> visitQueue = new ArrayList<>();
         ArrayList<Point> resultPath = new ArrayList<>();
-        GenericMath.swapPoint(startingPoint);
+        GM.swapPoint(startingPoint);
         visitQueue.add(startingPoint);
         visitBitMap[startingPoint.y][startingPoint.x] = true;
         int breadthFirstBorder = 1;
@@ -66,7 +66,7 @@ public class Terra {
             Point[] neighbours = getNeighbourArrayIndeces(p.y, p.x, map);
             for(Point n: neighbours){
                 if(n!=null)
-                    GenericMath.swapPoint(n);
+                    GM.swapPoint(n);
                 if(n!=null && !visitBitMap[n.y][n.x] && passableCondition.apply(map[n.y][n.x])){
                     visitQueue.add(n);
                     visitBitMap[n.y][n.x] = true;
@@ -92,7 +92,7 @@ public class Terra {
         int[][] distanceMap = new int[map.length][map[0].length];
         ArrayList<Point> visitQueue = new ArrayList<>();
         ArrayList<Point> resultPath = new ArrayList<>();
-        GenericMath.swapPoint(startingPoint);
+        GM.swapPoint(startingPoint);
         visitQueue.add(startingPoint);
         distanceMap[startingPoint.y][startingPoint.x] = 1;
         //starting point starts with an arbitrary distance of 1
@@ -116,7 +116,7 @@ public class Terra {
             Point[] neighbours = getNeighbourArrayIndeces(p.y, p.x, map);
             for(Point n: neighbours){
                 if(n!=null)
-                    GenericMath.swapPoint(n);
+                    GM.swapPoint(n);
                 if(n!=null && distanceMap[n.y][n.x]==0 && passableCondition.apply(map[n.y][n.x])){
                     boolean insertedFlag = false;
                     for(int i = 0; i < visitQueue.size(); i++){
@@ -200,12 +200,12 @@ public class Terra {
     }
     
     protected void latitudeConfiguration(double latitude) {
-        GenericMath.normalizeArray(terrainProbs);
+        GM.normalizeArray(terrainProbs);
         terrainProbs[1] *= Math.pow(1/terrainProbs[1] , latitude - 0.8); //experimentality desert prob
         terrainProbs[4] *= 0.75*2*(1-latitude) + 0.25; 
         //becomes default value at middle. even at the southernmost parts, there can be forests
         terrainProbs[3] *= 2*(1-latitude); //becomes default value at middle
-        GenericMath.normalizeArray(terrainProbs);
+        GM.normalizeArray(terrainProbs);
     }
     
     protected void decideResource(Terra[] neighbours, double resourceSimilarityCoefficient, Resources resources, Random seed){
@@ -247,48 +247,66 @@ public class Terra {
     
     //be toooo careful with this fuckin method
     public static Point[] getNeighbourArrayIndeces(int row, int col, Terra[][] map){
-        if(row < 0 || row >= map.length || col < 0 || col >= map[0].length)
-            return null;
         Point[] nb = new Point[6];
-        if(row != 0) nb[0] = new java.awt.Point(row-1,col);
+        if(row > 0) nb[0] = new java.awt.Point(row-1,col);
         if(row < map.length-1) nb[3] = new java.awt.Point(row+1,col);
         
-        if (col%2 == 0){
-            if(row != 0 && col < map[0].length-1) nb[1] = new java.awt.Point(row-1,col+1);
+        if ((col&1) == 0){
+            if(row > 0 && col < map[0].length-1) nb[1] = new java.awt.Point(row-1,col+1);
             if(col < map[0].length-1) nb[2] = new java.awt.Point(row,col+1);
-            if(col != 0) nb[4] = new java.awt.Point(row,col-1);
-            if(col != 0 && row != 0) nb[5] = new java.awt.Point(row-1,col-1);
+            if(col > 0) nb[4] = new java.awt.Point(row,col-1);
+            if(col > 0 && row > 0) nb[5] = new java.awt.Point(row-1,col-1);
         }
         else{
             if(col < map[0].length-1) nb[1] = new java.awt.Point(row,col+1);
-            if(row < map.length-1 && col != map[0].length-1) nb[2] = new java.awt.Point(row+1,col+1);
-            if(row < map.length-1 && col != 0) nb[4] = new java.awt.Point(row+1,col-1);
-            if(col != 0) nb[5] = new java.awt.Point(row,col-1);
+            if(row < map.length-1 && col < map[0].length-1) nb[2] = new java.awt.Point(row+1,col+1);
+            if(row < map.length-1 && col > 0) nb[4] = new java.awt.Point(row+1,col-1);
+            if(col > 0) nb[5] = new java.awt.Point(row,col-1);
         }
         
         return nb;
     }
     public static Terra[] getNeighbours(int col, int row, Terra[][] map){
-        if(row < 0 || row >= map.length || col < 0 || col >= map[0].length)
-            return null;
         Terra[] nb = new Terra[6];
-        if(row != 0) nb[0] = map[row-1][col];
-        if(row < map.length-1) nb[3] = map[row+1][col];
+        nb[0] = GM.getMatrix(map, row-1, col);
+        nb[3] = GM.getMatrix(map, row+1, col);
         
         if (col%2 == 0){
-            if(row != 0 && col < map[0].length-1) nb[1] = map[row-1][col+1];
-            if(col < map[0].length-1) nb[2] = map[row][col+1];
-            if(col != 0) nb[4] = map[row][col-1];
-            if(col != 0 && row != 0) nb[5] = map[row-1][col-1];
+            nb[1] = GM.getMatrix(map, row-1,col+1);
+            nb[2] = GM.getMatrix(map, row,col+1);
+            nb[4] = GM.getMatrix(map, row,col-1);
+            nb[5] = GM.getMatrix(map, row-1,col-1);
         }
         else{
-            if(col < map[0].length-1) nb[1] = map[row][col+1];
-            if(row < map.length-1 && col != map[0].length-1) nb[2] = map[row+1][col+1];
-            if(row < map.length-1 && col != 0) nb[4] = map[row+1][col-1];
-            if(col != 0) nb[5] = map[row][col-1];
+            nb[1] = GM.getMatrix(map, row,col+1);
+            nb[2] = GM.getMatrix(map, row+1,col+1);
+            nb[4] = GM.getMatrix(map, row+1,col-1);
+            nb[5] = GM.getMatrix(map, row,col-1);
         }
         
         return nb;
     }
     
+    public static boolean isTerraIncognita(Terra t){
+        return t == null || t.getOwner() == null;
+    }
+    
+    public static Point[] getNeighbourArrayIndecesNoNulls(int row, int col, Terra[][] map){
+        /*hacks and hacks
+        this method pushes the inputs to an acceptable region in the array
+        so it never returns null points from the get neighbour indices method
+        
+        however adding column number with a random nnumber was problematic
+        because it was unstable. 
+        forcing the added number to be always even was necessary
+        otherwise it changed the returned neighbours
+        */
+        Point[] nb = getNeighbourArrayIndeces(map.length/2, (col&1) + 2, map);
+        for(Point p: nb)
+        {   
+            p.x -=  map.length/2 - row;
+            p.y -= ((col&1) + 2) - col;
+        }
+        return nb;
+    }
 }

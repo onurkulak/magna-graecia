@@ -9,10 +9,10 @@ import java.awt.Point;
 import java.util.Random;
 
 /**
- *
+ * GM stands for generic math, or methods
  * @author onur
  */
-public class GenericMath {
+public class GM {
 
     static <element> element getSample(element[] values, double[] terrainProbs) {
         return getSample(values, terrainProbs, new Random());
@@ -41,5 +41,14 @@ public class GenericMath {
         t = n.x;
         n.x = n.y;
         n.y=t;
+    }
+    
+    //returns null instead of array index out of bounds..
+    public static < E > E getMatrix(E[][] arr, int i, int j){
+        try{
+            return arr[i][j];
+        }catch(ArrayIndexOutOfBoundsException e){
+            return null;
+        }
     }
 }
