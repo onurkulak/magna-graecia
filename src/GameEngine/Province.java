@@ -6,6 +6,7 @@
 package GameEngine;
 
 import java.util.Random;
+import javafx.scene.Node;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 
@@ -15,8 +16,12 @@ import javafx.scene.image.Image;
  */
 public class Province extends Terra {
 
+    private City capital;
     private Force military;
     private int population;
+    private static String[] provinceNamesList;
+    private static Random privateSeed;
+
     private static final String[] borderPostfixes = new String[]{
         "tr", "r", "br", "bl", "l", "tl"
     };
@@ -29,15 +34,19 @@ public class Province extends Terra {
 
     public Province(int x, int y) {
         super(x, y);
+        setName(provinceNamesList[privateSeed.nextInt(provinceNamesList.length)]);
+        setCapital(null);
         setPopulation(0);
     }
 
-    public Province(TerrainType t, Resource r, int pop, int x, int y) {
+    public Province(TerrainType t, Resource r, int pop, int x, int y, City c) {
         //initial settlements around the city
         super(x, y);
         setTerrain(t);
         setProducedResource(r);
         setPopulation(pop);
+        setCapital(c);
+        setName(provinceNamesList[privateSeed.nextInt(provinceNamesList.length)]);
     }
 
     public Province(TerrainType t, Random seed, Resources r, int x, int y) {
@@ -46,10 +55,8 @@ public class Province extends Terra {
         setTerrain(t);
         setProducedResource(getRandomResorceForTerrain(t, seed, r));
         setPopulation(0);
-    }
-
-    public void draw(GraphicsContext gc, int x, int y, int edgeLength, boolean[] displaySettings) {
-        super.draw(gc, x, y, edgeLength, displaySettings);
+        setCapital(null);
+        setName(provinceNamesList[privateSeed.nextInt(provinceNamesList.length)]);
     }
 
     public Province(Terra[] neighbours, TerrainType regionTerrain, Resource regionResource,
@@ -109,12 +116,12 @@ public class Province extends Terra {
     }
 
     //i = 0 is top right, 1 is right etc. clockwise
-    public static boolean drawGivenBorders(Terra[] nb, Province centerProvince, 
+    public static boolean drawGivenBorders(Terra[] nb, Province centerProvince,
             int checkedNeighbours, GraphicsContext gc, int edgeLength, int x, int y) {
         String p = null;
         if (!isTerraIncognita(nb[checkedNeighbours]) && !isTerraIncognita(nb[(checkedNeighbours + 1) % 6])
                 && nb[checkedNeighbours].getOwner() == nb[(checkedNeighbours + 1) % 6].getOwner()
-                && (isTerraIncognita(centerProvince) || nb[checkedNeighbours].getOwner() != centerProvince.getOwner())){
+                && (isTerraIncognita(centerProvince) || nb[checkedNeighbours].getOwner() != centerProvince.getOwner())) {
             p = "concave-";
         } else if (!isTerraIncognita(centerProvince)
                 && (isTerraIncognita(nb[checkedNeighbours]) || centerProvince.getOwner() != nb[checkedNeighbours].getOwner())
@@ -130,5 +137,46 @@ public class Province extends Terra {
                 p, edgeLength / 18 * 63, 0, true, true),
                 x - edgeLength * edgeOffsets[checkedNeighbours][0], y - edgeLength * edgeOffsets[checkedNeighbours][1]);
         return true;
+    }
+
+    public void draw(GraphicsContext gc, int x, int y, int edgeLength, boolean[] displaySettings) {
+        super.draw(gc, x, y, edgeLength, displaySettings);
+        if (displaySettings[3]) {
+            drawPopulation(gc, x, y, edgeLength);
+        }
+        if (displaySettings[2] && military != null) {
+            military.drawStrategicMap(gc, x, y, edgeLength);
+        }
+    }
+
+    protected void drawPopulation(GraphicsContext gc, int x, int y, int edgeLength) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public Node getConstructionPanel() {
+        return null;
+    }
+
+    public static void setPrivateSeed(Random privateSeed) {
+        Province.privateSeed = privateSeed;
+    }
+
+    public City getCapital() {
+        return capital;
+    }
+
+    public void setCapital(City capital) {
+        this.capital = capital;
+    }
+
+    public String getInfo() {
+        return "Province Name:\t" + (getName() == null || getName().equals("")
+                ? "Coast" : getName())
+                + "\nPart Of:\t\t" + (getCapital() == null ? "Wilderness" : getCapital().getName())
+                + "\nPopulation:\t\t" + getPopulation() + "\n" + super.getInfo();
+    }
+
+    public static void setProvinceNamesList(String[] provinceNamesList) {
+        Province.provinceNamesList = provinceNamesList;
     }
 }

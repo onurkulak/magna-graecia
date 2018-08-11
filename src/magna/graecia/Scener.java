@@ -254,13 +254,31 @@ public class Scener {
         drawSmallMapCanvas(openGame, gc);
         sp.setContent(canvas);
         bp.setCenter(sp);
+        HBox bottomPanel;
+        Label l = getTerrainInfoLabel();
+        
         canvas.setOnMouseClicked(new EventHandler<MouseEvent>()
         {
             public void handle(MouseEvent e)
             {
+                Point coords = smallMapHexLayout.pixelToHex(e.getX(), e.getY());
+                
+                //debug part
                 System.out.println(e.getX() + " " + e.getY());
-                System.out.println(smallMapHexLayout.pixelToHex(e.getX(), e.getY()).x);
-                System.out.println(smallMapHexLayout.pixelToHex(e.getX(), e.getY()).y);
+                System.out.println(coords.x);
+                System.out.println(coords.y);
+                
+                bp.setRight(openGame.smallMap[coords.y][coords.x].getConstructionPanel());
+            }
+        });
+        
+        canvas.setOnMouseMoved(new EventHandler<MouseEvent>()
+        {
+            public void handle(MouseEvent e)
+            {
+                Point coords = smallMapHexLayout.pixelToHex(e.getX(), e.getY());
+                if(coords.y < openGame.smallMap.length && coords.x < openGame.smallMap[0].length)
+                    l.setText(openGame.smallMap[coords.y][coords.x].getInfo());
             }
         });
         
@@ -292,8 +310,19 @@ public class Scener {
             });
         }
         VBox checkboxes = new VBox(displayChoices);
-        HBox visualSettings = new HBox(20, zoom, checkboxes);
-        bp.setBottom(visualSettings);
+        bottomPanel = new HBox(20, l, zoom, checkboxes);
+        bp.setBottom(bottomPanel);
+    }
+
+    private static Label getTerrainInfoLabel() {
+        Label terrainInfo = new Label("");
+        Image i = new Image("/files/smallTextures/buttonTexture.jpg");
+        BackgroundImage bi = new BackgroundImage(i, BackgroundRepeat.REPEAT, BackgroundRepeat.REPEAT, BackgroundPosition.DEFAULT, BackgroundSize.DEFAULT);
+        Background b = new Background(bi);
+        terrainInfo.setBackground(b);
+        terrainInfo.setPrefSize(250, 150);
+        terrainInfo.setFont(Font.font("Albertus Medium", 15));
+        return terrainInfo;
     }
 
     private static void drawSmallMapCanvas(Game openGame, GraphicsContext gc) {
