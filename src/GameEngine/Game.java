@@ -14,7 +14,6 @@ import java.io.FileNotFoundException;
 import java.io.BufferedReader;
 /**
  *
- * to do: open sea access for every city!!
  * rivers?
  * wave function collapse in github can be used to create additional terrains
  * @author onur
@@ -70,10 +69,13 @@ public class Game {
         //assuming every hex on strategy map corresponds to 4*4 hexes on small map
         smallMap = new Province[smallMapEdge][smallMapEdge];
         
+        //these two liens are for random generation of names
+        //even if they are not explicitly created in this class
+        Province.setPrivateSeed(seed); 
+        Province.setProvinceNamesList(provinceNames);
+        
         createSmallMapBorderTerrains(smallMapEdge, p, largeMapEdge);
         createCitiesAndSeas(largeMapEdge, p, smallMapEdge);
-        Faction f = new AIFaction();
-        Faction f2 = new AIFaction();
         for (int i = 0; i < smallMap.length; i++) {
             for (int j = 0; j < smallMap[0].length; j++) {
                 if(smallMap[i][j]==null)
@@ -154,13 +156,16 @@ public class Game {
                     if (cityY >= smallMapSize-2) cityY = smallMapSize-3;
                     if (cityX >= smallMapSize-2) cityX = smallMapSize-3;
                     //to be sure cities are not created on the edges
-                    
-                    smallMap[cityY][cityX] = new City(largeMap[i+p.y][j+p.x].getTerrain(), cityX, cityY);
+                    City c = new City(largeMap[i+p.y][j+p.x].getTerrain(), cityX, cityY);
+                    smallMap[cityY][cityX] = c;
+                    c.setName(largeMap[i+p.y][j+p.x].getName());
                     int largeMapMirror = seed.nextInt(6);
                     Point p1 = Terra.getNeighbourArrayIndeces(cityY, cityX, smallMap)[largeMapMirror];
                     while(smallMap[p1.x][p1.y]!=null)
                         p1 = Terra.getNeighbourArrayIndeces(cityY, cityX, smallMap)[(largeMapMirror++)%6];
-                    smallMap[p1.x][p1.y]= new Province(largeMap[i+p.y][j+p.x].getTerrain(), largeMap[i+p.y][j+p.x].getResource(), 1, p1.y, p1.x);
+                    smallMap[p1.x][p1.y]= new Province(largeMap[i+p.y][j+p.x]
+                            .getTerrain(), largeMap[i+p.y][j+p.x].getResource(),
+                            1, p1.y, p1.x, c);
                     ArrayList<Point> nearestSeaPath = Terra.randomBreadthFirstSearchWithObstacles(
                             (Terra t)->{return t != null && t.getTerrain()==Terra.TerrainType.SEA;}, 
                             (Terra t)->{return t==null || t.getTerrain()==Terra.TerrainType.SEA;}, 
@@ -171,21 +176,22 @@ public class Game {
                         for(int pathIterator = 1; pathIterator < nearestSeaPath.size()-1; pathIterator++)
                             smallMap[nearestSeaPath.get(pathIterator).y][nearestSeaPath.get(pathIterator).x] = 
                                     new Province(Terra.TerrainType.SEA, null, 0, 
-                                            nearestSeaPath.get(pathIterator).y, nearestSeaPath.get(pathIterator).x);
+                                            nearestSeaPath.get(pathIterator).y, 
+                                            nearestSeaPath.get(pathIterator).x, null);
                     }
                     //the resource represented in the large map and the port-sea is always present in the smaller map
                 }
-                else{
+                else{ //create small sea groups corresponding to larger map for small map
                     int seaY = (int) Math.round((smallLargeProportion) * (i+0.5) + (seed.nextGaussian()*(smallLargeProportion-4)/2));
                     int seaX = (int) Math.round((smallLargeProportion) * (j+0.5) + (seed.nextGaussian()*(smallLargeProportion-4)/2));
-                    smallMap[seaY][seaX] = new Province(Terra.TerrainType.SEA, null, 0, seaX, seaY);
+                    smallMap[seaY][seaX] = new Province(Terra.TerrainType.SEA, null, 0, seaX, seaY, null);
                     
                     Point p1 = Terra.getNeighbourArrayIndeces(seaY, seaX, smallMap)[seed.nextInt(6)];
                     Point p2 = Terra.getNeighbourArrayIndeces(seaY, seaX, smallMap)[seed.nextInt(6)];
                     while(p2.equals(p1))
                         p2 = Terra.getNeighbourArrayIndeces(seaY, seaX, smallMap)[seed.nextInt(6)];
-                    smallMap[p1.x][p1.y]= new Province(Terra.TerrainType.SEA, null, 0, p1.y, p1.x);
-                    smallMap[p2.x][p2.y]= new Province(Terra.TerrainType.SEA, null, 0, p2.y, p2.x);
+                    smallMap[p1.x][p1.y]= new Province(Terra.TerrainType.SEA, null, 0, p1.y, p1.x, null);
+                    smallMap[p2.x][p2.y]= new Province(Terra.TerrainType.SEA, null, 0, p2.y, p2.x, null);
                 }
             }
     }
