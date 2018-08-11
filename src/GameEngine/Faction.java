@@ -17,18 +17,93 @@ public class Faction {
     private ArrayList<Province> provinces;
     private ArrayList<Region> regions;
     private Civic civicChoices;
-    private ArrayList<TradeOffer> activeTradeOffers;
+    private ArrayList<TradeOffer> availableTradeOffers;
     private ArrayList<Shipment> ongoingShipments;
     private int[] resourceAmounts;
     private ArrayList<Force> forces;
     private ArrayList<Army> availableMercenaries;
     private ArrayList<Strategos> availableGenerals;
-    private Technology[] availableTechnologies;
+    private ArrayList<Technology> availableTechnologies;
+
+    public String getName() {
+        return name;
+    }
+
+    public Color getColor() {
+        return color;
+    }
+
+    public ArrayList<Province> getProvinces() {
+        return provinces;
+    }
+
+    public ArrayList<Region> getRegions() {
+        return regions;
+    }
+
+    public Civic getCivicChoices() {
+        return civicChoices;
+    }
+
+    public ArrayList<TradeOffer> getAvailableTradeOffers() {
+        return availableTradeOffers;
+    }
+
+    public ArrayList<Shipment> getOngoingShipments() {
+        return ongoingShipments;
+    }
+
+    public int[] getResourceAmounts() {
+        return resourceAmounts;
+    }
+
+    public ArrayList<Force> getForces() {
+        return forces;
+    }
+
+    public ArrayList<Army> getAvailableMercenaries() {
+        return availableMercenaries;
+    }
+
+    public ArrayList<Strategos> getAvailableGenerals() {
+        return availableGenerals;
+    }
+
+    public ArrayList<Technology> getAvailableTechnologies() {
+        return availableTechnologies;
+    }
+
+    public Trait[] getTraits() {
+        return traits;
+    }
+
+    public ArrayList<Technology> getDiscoveredTechs() {
+        return discoveredTechs;
+    }
+
+    public ArrayList<Technology> getUnknownTechs() {
+        return unknownTechs;
+    }
+
+    public diceElement[] getDice() {
+        return Dice;
+    }
+
+    public ArrayList<Building> getAvailableBuildings() {
+        return availableBuildings;
+    }
+
+    public ArrayList<Unit> getAvailableUnits() {
+        return availableUnits;
+    }
+
+    public ArrayList<Stance> getDiplomaticStances() {
+        return diplomaticStances;
+    }
     private Trait[] traits;
     private ArrayList<Technology> discoveredTechs;
     private ArrayList<Technology> unknownTechs;
     private diceElement[] Dice;
-    
     private ArrayList<Building> availableBuildings; //can be switched with bitmaps
     private ArrayList<Unit> availableUnits;
     
