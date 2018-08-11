@@ -309,4 +309,10 @@ public class Terra {
         }
         return nb;
     }
+    
+    public String getInfo() {
+        return "Allegiance:\t\t" + (getOwner() == null ? "Barbarian" : getOwner().getName())+
+               "\nProduces:\t\t" + (getResource() == null ? "Nothingness" : getResource().getName()) +
+               "\nTerrain Type:\t" + terrain.name().toLowerCase();
+    }
 }
