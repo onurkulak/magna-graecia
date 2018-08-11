@@ -11,4 +11,9 @@ package GameEngine;
  */
 class Unit {
     //will be added later
+    private String name;
+
+    public String getName() {
+        return name;
+    }
 }
