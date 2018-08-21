@@ -120,20 +120,19 @@ public class Game {
     }
 
     private void createSmallMapBorderTerrains(int smallMapSize, Point p, int largeMapEdge) {
-        // seems like not working..
         for (int i = 1; i < smallMapSize - 1; i++) {
             int largeMapX = i / smallLargeProportion + p.x;
             if (i % smallLargeProportion < smallLargeProportion / 4) {
-                smallMap[i][0] = new Province(Terra.getNeighbours(largeMapX, p.y, largeMap)[5], seed, resources, 0, i);
-                smallMap[i][smallMapSize - 1]
+                smallMap[0][i] = new Province(Terra.getNeighbours(largeMapX, p.y, largeMap)[5], seed, resources, 0, i);
+                smallMap[smallMapSize - 1][i]
                         = new Province(Terra.getNeighbours(largeMapX, p.y + largeMapEdge - 1, largeMap)[4], seed, resources, smallMapSize - 1, i);
             } else if (i % smallLargeProportion >= smallLargeProportion * 3 / 4) {
-                smallMap[i][0] = new Province(Terra.getNeighbours(largeMapX, p.y, largeMap)[1], seed, resources, 0, i);
-                smallMap[i][smallMapSize - 1]
+                smallMap[0][i] = new Province(Terra.getNeighbours(largeMapX, p.y, largeMap)[1], seed, resources, 0, i);
+                smallMap[smallMapSize - 1][i]
                         = new Province(Terra.getNeighbours(largeMapX, p.y + largeMapEdge - 1, largeMap)[2], seed, resources, smallMapSize - 1, i);
             } else {
-                smallMap[i][0] = new Province(Terra.getNeighbours(largeMapX, p.y, largeMap)[0], seed, resources, 0, i);
-                smallMap[i][smallMapSize - 1]
+                smallMap[0][i] = new Province(Terra.getNeighbours(largeMapX, p.y, largeMap)[0], seed, resources, 0, i);
+                smallMap[smallMapSize - 1][i]
                         = new Province(Terra.getNeighbours(largeMapX, p.y + largeMapEdge - 1, largeMap)[3], seed, resources, smallMapSize - 1, i);
             }
         }
@@ -141,12 +140,12 @@ public class Game {
         for (int i = 0; i < smallMapSize; i++) {
             int largeMapY = i / smallLargeProportion + p.y;
             if (i % smallLargeProportion < smallLargeProportion / 2) {
-                smallMap[0][i] = new Province(Terra.getNeighbours(p.x, largeMapY, largeMap)[5], seed, resources, i, 0);
-                smallMap[smallMapSize - 1][i]
-                        = new Province(Terra.getNeighbours(p.x + largeMapEdge - 1, largeMapY, largeMap)[4], seed, resources, i, smallMapSize - 1);
+                smallMap[i][0] = new Province(Terra.getNeighbours(p.x, largeMapY, largeMap)[5], seed, resources, i, 0);
+                smallMap[i][smallMapSize - 1]
+                        = new Province(Terra.getNeighbours(p.x + largeMapEdge - 1, largeMapY, largeMap)[1], seed, resources, i, smallMapSize - 1);
             } else {
-                smallMap[0][i] = new Province(Terra.getNeighbours(p.x, largeMapY, largeMap)[1], seed, resources, i, 0);
-                smallMap[smallMapSize - 1][i]
+                smallMap[i][0] = new Province(Terra.getNeighbours(p.x, largeMapY, largeMap)[4], seed, resources, i, 0);
+                smallMap[i][smallMapSize - 1]
                         = new Province(Terra.getNeighbours(p.x + largeMapEdge - 1, largeMapY, largeMap)[2], seed, resources, i, smallMapSize - 1);
             }
         }
