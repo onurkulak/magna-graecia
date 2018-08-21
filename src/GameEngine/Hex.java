@@ -189,6 +189,10 @@ class OffsetCoord
         int s = -q - r;
         return new Hex(q, r, s);
     }
+    
+    boolean equals(OffsetCoord o) {
+        return this == o || this.col == o.col || this.row == o.row;
+    }
 }
 
 class Orientation

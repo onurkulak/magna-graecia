@@ -6,9 +6,11 @@
 package GameEngine;
 
 import java.util.Random;
+import java.util.ArrayList;
 import javafx.scene.Node;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
+import java.awt.Point;
 
 /**
  *
@@ -32,34 +34,38 @@ public class Province extends Terra {
     };
     private static final String pathtoBorderGraphics = "files/terrain/wall/castle-";
 
-    public Province(int x, int y) {
-        super(x, y);
+    public Province(int col, int row) {
+        super(col, row);
         setName(provinceNamesList[privateSeed.nextInt(provinceNamesList.length)]);
         setCapital(null);
         setPopulation(0);
     }
 
-    public Province(TerrainType t, Resource r, int pop, int x, int y, City c) {
+    public Province(TerrainType t, Resource r, int pop, int x, int y, City c, double altitude) {
         //initial settlements around the city
         super(x, y);
         setTerrain(t);
         setProducedResource(r);
         setPopulation(pop);
+        setPseudoAltitude(altitude);
         setCapital(c);
         setName(provinceNamesList[privateSeed.nextInt(provinceNamesList.length)]);
     }
 
-    public Province(TerrainType t, Random seed, Resources r, int x, int y) {
+    public Province(Terra t, Random seed, Resources r, int x, int y) {
         //newly created province, without neighbour effect
         super(x, y);
-        setTerrain(t);
-        setProducedResource(getRandomResorceForTerrain(t, seed, r));
+        setTerrain(t.getTerrain());
+        setProducedResource(getRandomResorceForTerrain(t.getTerrain(), seed, r));
         setPopulation(0);
         setCapital(null);
         setName(provinceNamesList[privateSeed.nextInt(provinceNamesList.length)]);
+        if(!t.isLake)
+            setIsLake(t.isLake);
+        setPseudoAltitude(t.getPseudoAltitude());
     }
 
-    public Province(Terra[] neighbours, TerrainType regionTerrain, Resource regionResource,
+    public Province(Terra[] neighbours, Region r,
             double provinceRegionTerrainSim, double provinceRegionResourceSim,
             double provinceNeighboursTerrainSim, double provinceNeighboursResourceSim,
             double latitude, Random seed, String name, Resources resources, int x, int y) {
@@ -74,7 +80,7 @@ public class Province extends Terra {
         for (int i = 0; i < terrainProbs.length; i++) {
             terrainProbs[i] *= 1 - provinceRegionTerrainSim - provinceNeighboursTerrainSim;
         }
-        terrainProbs[regionTerrain.ordinal()] += provinceRegionTerrainSim;
+        terrainProbs[r.getTerrain().ordinal()] += provinceRegionTerrainSim;
         for (Terra neighbour : neighbours) {
             if (neighbour != null) {
                 terrainProbs[neighbour.getTerrain().ordinal()] += provinceNeighboursTerrainSim / neighbours.length;
@@ -85,11 +91,12 @@ public class Province extends Terra {
         setName(name);
 
         if (seed.nextDouble() < provinceRegionResourceSim) {
-            setProducedResource(regionResource);
+            setProducedResource(r.getResource());
         } else {
             decideResource(neighbours, provinceNeighboursResourceSim, resources, seed);
         }
         setPopulation(0);
+        setPseudoAltitude(r.getPseudoAltitude());
     }
 
     public Force getMilitary() {
@@ -178,5 +185,30 @@ public class Province extends Terra {
 
     public static void setProvinceNamesList(String[] provinceNamesList) {
         Province.provinceNamesList = provinceNamesList;
+    }
+    
+    public boolean isLake(Terra[][] map) {
+        if (!simpleLakeCheckBase()) {
+            isLake = randomBreadthFirstSearchWithObstacles(
+                    (Terra t) -> { return t != null && t.getTerrain() == Terra.TerrainType.SEA
+                            && t.simpleLakeCheckBase() && !t.isLake;},
+                    (Terra t) -> {
+                        return t != null && t.getTerrain() == Terra.TerrainType.SEA;}
+                    , map, new Point(coord.row, coord.col)) == null;
+            lakeCalculationMade = true;
+            return isLake;
+        } else {
+            return isLake;
+        }
+    }
+
+    public void setIsLake(boolean isLake) {
+        this.lakeCalculationMade = true;
+        this.isLake = isLake;
+    }
+
+    @Override
+    boolean doesAppearInSmallMap() {
+        return false;
     }
 }

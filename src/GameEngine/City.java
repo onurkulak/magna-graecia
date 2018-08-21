@@ -41,12 +41,13 @@ public class City extends Province {
     private ArrayList<Unit> trainQueue;
     private CityOrder co = null;
 
-    public City(TerrainType t, int x, int y) {
+    public City(Terra t, int x, int y) {
         super(x, y);
-        setTerrain(t);
+        setTerrain(t.getTerrain());
         buildings = new ArrayList<>();
         trainQueue = new ArrayList<>();
         setCapital(this);
+        setPseudoAltitude(t.getPseudoAltitude());
     }
 
     @Override

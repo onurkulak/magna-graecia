@@ -6,13 +6,15 @@
 package GameEngine;
 
 import java.util.Random;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
 /**
  *
  * @author onur
  */
 public class Region extends Terra{
     
-    
+    private boolean appearsInSmallMap;
     
     //by latitude I mean 1 if it's the bottom row, 0 if top
     Region(String name, double latitude, Terra[] neighbours, 
@@ -38,6 +40,29 @@ public class Region extends Terra{
         setName(name);
         
         decideResource(neighbours, resourceSimilarityCoefficient, resources, seed);
+        
+        appearsInSmallMap = false;
+    }
+
+    public void setAppearsInSmallMap(boolean appearsInSmallMap) {
+        this.appearsInSmallMap = appearsInSmallMap;
+    }
+
+    public boolean doesAppearInSmallMap() {
+        return appearsInSmallMap;
+    }
+
+    @Override
+    public void draw(GraphicsContext gc, int x, int y, int edgeLength, boolean[] displaySettings) {
+        super.draw(gc, x, y, edgeLength, displaySettings);
+        if(displaySettings[2] && appearsInSmallMap) {
+            drawLargeSmallMapCorrespondence(gc, x, y, edgeLength);
+        }
     }
     
+    private void drawLargeSmallMapCorrespondence(GraphicsContext gc, int x, int y, int edgeLength) {
+        gc.drawImage(new Image(
+                "files/terrain/mask.png", edgeLength * 2, edgeLength * 2, true, true),
+                x, y);
+    }
 }
