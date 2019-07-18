@@ -147,4 +147,16 @@ class Resources {
     public Resource getSlave() {
         return slave;
     }
+    
+    //well that is everything except slaves..
+    public Resource[] getAllStorableResources(){
+        return new Resource[]{
+            wheat, clay,
+            wine, flax, livestock,
+            dye, salt, spice,
+            iron, copper, marble,
+            timber, olive,
+            fish, pot, glass
+        };
+    }
 }
