@@ -66,6 +66,10 @@ public abstract class Terra {
             Function<Terra, Boolean> searchCondition,
             Function<Terra, Boolean> passableCondition,
             Terra[][] map, Point startingPoint) {
+        /* input starting point has a weird property:
+        p.y is the column of element in the map
+        p.x is the row
+        */
         Random r = new Random();
         Point[][] resultConstructor = new Point[map.length][map[0].length];
         boolean[][] visitBitMap = new boolean[map.length][map[0].length];
@@ -188,11 +192,13 @@ public abstract class Terra {
         gc.drawImage(new Image(
                 "files/terrain/" + getTerrain().toString().toLowerCase() + ".png", edgeLength * 2, edgeLength * 2, true, true),
                 x, y);
-        for(int i = 0; i < getRivers().length; i++)
-            if(getRivers()[i])
+        for (int i = 0; i < getRivers().length; i++) {
+            if (getRivers()[i]) {
                 gc.drawImage(new Image(
-                "files/terrain/rivers/" + "coast-tropical-long-A04-" + edgePostfixes[i] + ".png",
+                        "files/terrain/rivers/" + "coast-tropical-long-A04-" + edgePostfixes[i] + ".png",
                         edgeLength * 2, edgeLength * 2, true, true), x, y);
+            }
+        }
     }
 
     public Faction getOwner() {
@@ -398,13 +404,15 @@ public abstract class Terra {
 
     private boolean isLakeRecursive(Terra[][] map, boolean[][] visited) {
         visited[coord.row][coord.col] = true;
-        if(!simpleLakeCheck(map))
+        if (!simpleLakeCheck(map)) {
             return false;
+        }
 
         Terra[] nb = getNeighbours(coord.col, coord.row, map);
         for (Terra t : nb) {
-            if (!visited[t.coord.row][t.coord.col] && t.getTerrain() == TerrainType.SEA)
+            if (!visited[t.coord.row][t.coord.col] && t.getTerrain() == TerrainType.SEA) {
                 isLake = isLake && t.isLakeRecursive(map, visited);
+            }
         }
         lakeCalculationMade = true;
         return isLake;
@@ -414,8 +422,7 @@ public abstract class Terra {
     //if returns false, certainly it's not a lake
     //if returns true, still needs to be checked
     private boolean simpleLakeCheck(Terra[][] map) {
-        if(!simpleLakeCheckBase())
-        {
+        if (!simpleLakeCheckBase()) {
             isLake = true;
             Terra[] nb = getNeighbours(coord.col, coord.row, map);
             int numberOfWaterNeighbours = 0;
@@ -436,8 +443,9 @@ public abstract class Terra {
 
             //at this point calculation is not finished, but isLake val is true
             return true;
+        } else {
+            return isLake;
         }
-        else return isLake;
     }
 
     //tries to make a simple check and returns lakeCalculationMade

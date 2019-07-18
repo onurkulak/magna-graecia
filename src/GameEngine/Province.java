@@ -187,6 +187,12 @@ public class Province extends Terra {
         Province.provinceNamesList = provinceNamesList;
     }
     
+    /**
+     *
+     *  if the tile is a water tile but not connected to a sea,
+     *  it's considered a lake
+     */
+    @Override
     public boolean isLake(Terra[][] map) {
         if (!simpleLakeCheckBase()) {
             isLake = randomBreadthFirstSearchWithObstacles(

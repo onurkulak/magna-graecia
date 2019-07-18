@@ -43,6 +43,14 @@ public class Region extends Terra{
         
         appearsInSmallMap = false;
     }
+    
+    // handy constructor for sea regions
+    Region (int col, int row) {
+        super(col, row);
+        appearsInSmallMap = false;
+        setTerrain(TerrainType.SEA);
+        setName("");
+    } 
 
     public void setAppearsInSmallMap(boolean appearsInSmallMap) {
         this.appearsInSmallMap = appearsInSmallMap;

@@ -235,15 +235,41 @@ public class Game {
         }
     }
 
-    //well, large map looks very shitty...
-    //but first do the river stuff..
     private void initializeLargerMap() {
+        // create a mediterranean look by adding a huge water area
+        int arbitrarySeaRootsCount = 5;
+        for (int i = -1; i < arbitrarySeaRootsCount;) {
+            int seaY = seed.nextInt(largeMap.length);
+            int seaX = seed.nextInt(largeMap[0].length);
+            if (largeMap[seaY][seaX] == null) {
+                largeMap[seaY][seaX] = new Region(seaX, seaY);
+                i++;
+            }
+            if (i > 0) {
+                ArrayList<Point> nearestSeaPath = Terra.randomBreadthFirstSearchWithObstacles(
+                        (Terra t) -> {
+                            return t != null && t.getTerrain() == Terra.TerrainType.SEA && t != largeMap[seaY][seaX];
+                        },
+                        (Terra t) -> {
+                            return t == null || t.getTerrain() == Terra.TerrainType.SEA;
+                        },
+                        largeMap, new Point(seaY, seaX));
+                for (int pathIterator = 1; pathIterator < nearestSeaPath.size() - 1; pathIterator++) {
+                    largeMap[nearestSeaPath.get(pathIterator).y][nearestSeaPath.get(pathIterator).x]
+                            = new Region(nearestSeaPath.get(pathIterator).x, nearestSeaPath.get(pathIterator).y);
+                }
+            }
+
+        }
+
         for (int i = 0; i < largeMap.length; i++) {
             for (int j = 0; j < largeMap[0].length; j++) {
-                largeMap[i][j] = new Region(
-                        regionNames[seed.nextInt(regionNames.length)],
-                        (double) j / largeMap.length, Terra.getNeighbours(j, i, largeMap), Terra.TerrainType.PLAIN,
-                        getTerrainSimilarityCoefficient(setup), getResourceSimilarityCoefficient(), seed, resources, j, i);
+                if (largeMap[i][j] == null) {
+                    largeMap[i][j] = new Region(
+                            regionNames[seed.nextInt(regionNames.length)],
+                            (double) i / largeMap.length, Terra.getNeighbours(j, i, largeMap), Terra.TerrainType.PLAIN,
+                            getTerrainSimilarityCoefficient(setup), getResourceSimilarityCoefficient(), seed, resources, j, i);
+                }
                 //System.out.print(largeMap[i][j].getTerrain()+ "\t");
             }
             //System.out.println();
@@ -368,7 +394,7 @@ public class Game {
                     t.setPseudoAltitude(0.75 + t.getPseudoAltitude());
                 } else if (t.getTerrain() != Terra.TerrainType.SEA) {
                     t.setPseudoAltitude(0.5 + t.getPseudoAltitude());
-                } else if (t.isLake(map)){
+                } else if (t.isLake(map)) {
                     t.setPseudoAltitude(0.75 + t.getPseudoAltitude());
                 } else {
                     // if a sea but not a lake
@@ -418,8 +444,7 @@ public class Game {
         }
     }
 
-    private double getAverageNeighbourAltitudeDuringIteration
-        (int i, int j, Terra[][] map, double[][] altitudes) {
+    private double getAverageNeighbourAltitudeDuringIteration(int i, int j, Terra[][] map, double[][] altitudes) {
         double sumNeighbourAltitude = 0;
         int numNb = 0;
         Point[] nb = Terra.getNeighbourArrayIndeces(i, j, map);
@@ -432,7 +457,7 @@ public class Game {
         double avgNbAltitude = sumNeighbourAltitude / numNb;
         return avgNbAltitude;
     }
-    
+
     private double getAverageNeighbourAltitude(int i, int j, Terra[][] map) {
         double sumNeighbourAltitude = 0;
         int numNb = 0;
@@ -448,20 +473,22 @@ public class Game {
     }
 
     private void createFreeRivers(Terra[][] map) {
-        for(int row = -1; row <= map.length; row++){
-            for(int col = -1; col <= map[0].length; col++){
+        for (int row = -1; row <= map.length; row++) {
+            for (int col = -1; col <= map[0].length; col++) {
                 Terra t = GM.getMatrix(map, row, col);
-                if(t == null && getRiverChanceForAltitude(getAverageNeighbourAltitude(row, col, map) + seed.nextDouble()))
+                if (t == null && getRiverChanceForAltitude(getAverageNeighbourAltitude(row, col, map) + seed.nextDouble())) {
                     startRiver(map, row, col);
-                else if(t==null);
-                else if(t.isLake(map)) startRiver(map, row, col);
-                else if(getRiverChanceForAltitude(t.getPseudoAltitude())) startRiver(map, row, col);
+                } else if (t == null); else if (t.isLake(map)) {
+                    startRiver(map, row, col);
+                } else if (getRiverChanceForAltitude(t.getPseudoAltitude())) {
+                    startRiver(map, row, col);
+                }
             }
         }
     }
-    
+
     //neeeds to be tuned well
-    private boolean getRiverChanceForAltitude(double alt){
+    private boolean getRiverChanceForAltitude(double alt) {
         return alt - 0.55 > seed.nextDouble();
     }
 
@@ -469,45 +496,47 @@ public class Game {
         //check if there's already a river, or if we encountered higher places than riverbed
         double sourceAltitude;
         Terra t = GM.getMatrix(map, row, col);
-        if(t == null)
+        if (t == null) {
             sourceAltitude = getAverageNeighbourAltitude(row, col, map) + seed.nextDouble() - 0.8;
-        else sourceAltitude = t.getPseudoAltitude();
-        
+        } else {
+            sourceAltitude = t.getPseudoAltitude();
+        }
+
         Terra[] nb = Terra.getNeighbours(col, row, map);
         double[] possibleDirectionAltitudes = new double[6];
         int possibleDirectionCount = 0;
-        for(int i = 0; i < 6; i++)
-            //if this direction is not possible
-            if(nb[i] == null || nb[(i+1)%6] == null ||
-                    nb[i].getPseudoAltitude() <= 0 ||
-                    nb[(i+1)%6].getPseudoAltitude() <= 0)
+        for (int i = 0; i < 6; i++) //if this direction is not possible
+        {
+            if (nb[i] == null || nb[(i + 1) % 6] == null
+                    || nb[i].getPseudoAltitude() <= 0
+                    || nb[(i + 1) % 6].getPseudoAltitude() <= 0) {
                 possibleDirectionAltitudes[i] = -1;
-            else {
-                 possibleDirectionAltitudes[i] = (nb[i].getPseudoAltitude() + nb[(i+1)%6].getPseudoAltitude()) /2;
-                 if(sourceAltitude < possibleDirectionAltitudes[i])
-                     possibleDirectionAltitudes[i] = -1;
-                 else {
-                     possibleDirectionCount++;
-                 }    
+            } else {
+                possibleDirectionAltitudes[i] = (nb[i].getPseudoAltitude() + nb[(i + 1) % 6].getPseudoAltitude()) / 2;
+                if (sourceAltitude < possibleDirectionAltitudes[i]) {
+                    possibleDirectionAltitudes[i] = -1;
+                } else {
+                    possibleDirectionCount++;
+                }
             }
-        if (possibleDirectionCount>0){
+        }
+        if (possibleDirectionCount > 0) {
             double[] slopes = new double[possibleDirectionCount];
             int[] directionIndices = new int[possibleDirectionCount];
             double minSlope = 1;
-            for(int i = 0, j = 0; i < 6; i++){
-                if(possibleDirectionAltitudes[i] > 0)
-                {
+            for (int i = 0, j = 0; i < 6; i++) {
+                if (possibleDirectionAltitudes[i] > 0) {
                     directionIndices[j] = i;
                     slopes[j] = sourceAltitude - possibleDirectionAltitudes[i];
-                    if(slopes[j] < minSlope)
+                    if (slopes[j] < minSlope) {
                         minSlope = slopes[j];
+                    }
                     j++;
                 }
             }
-            
-            for(int i = 0; i < slopes.length; i++){
-                if(slopes[i] <= minSlope * (1 + seed.nextGaussian()))
-                {
+
+            for (int i = 0; i < slopes.length; i++) {
+                if (slopes[i] <= minSlope * (1 + seed.nextGaussian())) {
                     continueRiver(row, col, map, directionIndices[i]);
                 }
             }
@@ -515,78 +544,98 @@ public class Game {
     }
 
     /*
-    0 is illegal altitudes are encountered and river is not created
-    1 is no river created because there's already one, or a sea tile exists
-    2 is successfully a river created
-    */
+     0 is illegal altitudes are encountered and river is not created
+     1 is no river created because there's already one, or a sea tile exists
+     2 is successfully a river created
+     */
     private int continueRiver(int row, int col, Terra[][] map, int directionIndex) {
-        Terra[] nb = Terra.getNeighbours(col, row, map);
-        Terra t = GM.getMatrix(map, row, col);
-        
-        Terra leftNb = nb[directionIndex];
-        Terra rightNb = nb[(directionIndex+1)%6];
-        
-        // if we end up in complete null stuff there's no river
-        if(t==null && (leftNb == null || rightNb == null))
+        try {
+            Terra[] nb = Terra.getNeighbours(col, row, map);
+            Terra t = GM.getMatrix(map, row, col);
+
+            Terra leftNb = nb[directionIndex];
+            Terra rightNb = nb[(directionIndex + 1) % 6];
+
+            // if we end up in complete null stuff there's no river
+            if (t == null && (leftNb == null || rightNb == null)) {
                 return 0;
-        //means we reached to a sea, lake or another river without a problem
-        if(leftNb==null || leftNb.getTerrain() == Terra.TerrainType.SEA || leftNb.getRivers()[(directionIndex+2)%6]
-                || rightNb==null || rightNb.getTerrain() == Terra.TerrainType.SEA)
-            return 1;
-        
-        Terra diagonalNb = Terra.getNeighbours(leftNb.coord.col, leftNb.coord.row, map)[(directionIndex+1)%6];
-        double lalt = leftNb.getPseudoAltitude();
-        double ralt = rightNb.getPseudoAltitude();
-        double dalt;
-        if(diagonalNb == null)
-            dalt = (lalt+ralt)/2;
-        else dalt = diagonalNb.getPseudoAltitude();
-        
-        // rivers can't go upwards
-        int riverCourse;
-        if(dalt > ralt && dalt > lalt)
-            return 0;
-        else if(ralt >= dalt && lalt >= dalt) {
-            if(ralt > lalt){
+            }
+            //means we reached to a sea, lake or another river without a problem
+            if (leftNb == null || leftNb.getTerrain() == Terra.TerrainType.SEA || leftNb.getRivers()[(directionIndex + 2) % 6]
+                    || rightNb == null || rightNb.getTerrain() == Terra.TerrainType.SEA) {
+                System.out.println("reached final river at:\n" + row + " " + col + "\n" + directionIndex);
+                return 1;
+            }
+
+            Terra diagonalNb = Terra.getNeighbours(leftNb.coord.col, leftNb.coord.row, map)[(directionIndex + 1) % 6];
+            double lalt = leftNb.getPseudoAltitude();
+            double ralt = rightNb.getPseudoAltitude();
+            double dalt;
+            if (diagonalNb == null) {
+                dalt = (lalt + ralt) / 2;
+            } else {
+                dalt = diagonalNb.getPseudoAltitude();
+            }
+
+            // rivers can't go upwards
+            int riverCourse;
+            if (dalt > ralt && dalt > lalt) {
+                return 0;
+            } else if (ralt >= dalt && lalt >= dalt) {
+                if (ralt > lalt) {
+                    riverCourse = continueRiver(rightNb.coord.row, rightNb.coord.col, map, (directionIndex + 5) % 6);
+                    if ((lalt - dalt) / (ralt - dalt) > seed.nextDouble()) {
+                        riverCourse += continueRiver(leftNb.coord.row, leftNb.coord.col, map, (directionIndex + 1) % 6);
+                    }
+                } else {
+                    riverCourse = continueRiver(leftNb.coord.row, leftNb.coord.col, map, (directionIndex + 1) % 6);
+                    if ((ralt - dalt) / (lalt - dalt) > seed.nextDouble()) {
+                        riverCourse += continueRiver(rightNb.coord.row, rightNb.coord.col, map, (directionIndex + 5) % 6);
+                    }
+                }
+            } else if (ralt >= dalt) {
                 riverCourse = continueRiver(rightNb.coord.row, rightNb.coord.col, map, (directionIndex + 5) % 6);
-                if((lalt - dalt) / (ralt - dalt) > seed.nextDouble())
-                    riverCourse += continueRiver(leftNb.coord.row, leftNb.coord.col, map, (directionIndex + 1) % 6);
-            }
-            else{
+            } else {
                 riverCourse = continueRiver(leftNb.coord.row, leftNb.coord.col, map, (directionIndex + 1) % 6);
-                if((ralt - dalt) / (lalt - dalt) > seed.nextDouble())
-                    riverCourse += continueRiver(rightNb.coord.row, rightNb.coord.col, map, (directionIndex + 5) % 6);
             }
-        } else if (ralt >= dalt) {
-            riverCourse = continueRiver(rightNb.coord.row, rightNb.coord.col, map, (directionIndex + 5) % 6);
-        } else {
-            riverCourse = continueRiver(leftNb.coord.row, leftNb.coord.col, map, (directionIndex + 1) % 6);
+            if (riverCourse > 0) {
+                System.out.print(riverCourse);
+                leftNb.getRivers()[(directionIndex + 2) % 6] = true;
+                rightNb.getRivers()[(directionIndex + 5) % 6] = true;
+                riverCourse = 2;
+                // this is still needed for debugging
+                System.out.println("Drawing river at:\n" + row + " " + col + "\n" + directionIndex);
+                System.out.println("Branches:\t" + ((leftNb.getRivers()[(directionIndex + 1) % 6]) ? " left branch taken " : "")
+                        + ((rightNb.getRivers()[directionIndex]) ? " right branch taken " : ""));
+            }
+            return riverCourse;
+        } catch (StackOverflowError e) {
+            return 0;
         }
-        if (riverCourse > 0) {
-            leftNb.getRivers()[(directionIndex+2)%6] = true;
-            rightNb.getRivers()[(directionIndex+5)%6] = true;
-            riverCourse = 2;
-            // System.out.println("Drawing river at:\n" + row + " " + col + "\n" + directionIndex);
-        }
-        return riverCourse;
     }
 
     private void createSmallMapRivers(int largeMapEdge) {
         createMapEdgeRivers(largeMapEdge);
         for (int row = cornerLargeMapCoords.y; row < cornerLargeMapCoords.y + largeMapEdge; row++) {
             for (int col = cornerLargeMapCoords.x; col < cornerLargeMapCoords.x + largeMapEdge; col++) {
-                if(largeMap[row][col].getRivers()[0])
-                    riverAttempt(smallMap, (row-cornerLargeMapCoords.y)*smallLargeProportion+1, (int) ((col - cornerLargeMapCoords.x + 0.50) * smallLargeProportion)/2*2, 0, smallLargeProportion/2);
-                if(largeMap[row][col].getRivers()[1])
-                    riverAttempt(smallMap, (int) ((row - cornerLargeMapCoords.y + 0.25) * smallLargeProportion), ((col - cornerLargeMapCoords.x + 1) * smallLargeProportion)-1, 1, smallLargeProportion/4);
-                if(largeMap[row][col].getRivers()[5])
-                    riverAttempt(smallMap, (int) ((row - cornerLargeMapCoords.y + 0.25) * smallLargeProportion), ((col - cornerLargeMapCoords.x) * smallLargeProportion)+1, 5, smallLargeProportion/4);
-                if(largeMap[row][col].getRivers()[3])
-                    riverAttempt(smallMap, (row-cornerLargeMapCoords.y+1)*smallLargeProportion-1, (int) ((col - cornerLargeMapCoords.x + 0.50) * smallLargeProportion)/2*2, 3, smallLargeProportion/2);
-                if(largeMap[row][col].getRivers()[2])
-                    riverAttempt(smallMap, (int) ((row - cornerLargeMapCoords.y + 0.75) * smallLargeProportion), ((col - cornerLargeMapCoords.x + 1) * smallLargeProportion)-1, 2, smallLargeProportion/4);
-                if(largeMap[row][col].getRivers()[4])
-                    riverAttempt(smallMap, (int) ((row - cornerLargeMapCoords.y + 0.75) * smallLargeProportion), ((col - cornerLargeMapCoords.x) * smallLargeProportion)+1, 4, smallLargeProportion/4);
+                if (largeMap[row][col].getRivers()[0]) {
+                    riverAttempt(smallMap, (row - cornerLargeMapCoords.y) * smallLargeProportion + 1, (int) ((col - cornerLargeMapCoords.x + 0.50) * smallLargeProportion) / 2 * 2, 0, smallLargeProportion / 2);
+                }
+                if (largeMap[row][col].getRivers()[1]) {
+                    riverAttempt(smallMap, (int) ((row - cornerLargeMapCoords.y + 0.25) * smallLargeProportion), ((col - cornerLargeMapCoords.x + 1) * smallLargeProportion) - 1, 1, smallLargeProportion / 4);
+                }
+                if (largeMap[row][col].getRivers()[5]) {
+                    riverAttempt(smallMap, (int) ((row - cornerLargeMapCoords.y + 0.25) * smallLargeProportion), ((col - cornerLargeMapCoords.x) * smallLargeProportion) + 1, 5, smallLargeProportion / 4);
+                }
+                if (largeMap[row][col].getRivers()[3]) {
+                    riverAttempt(smallMap, (row - cornerLargeMapCoords.y + 1) * smallLargeProportion - 1, (int) ((col - cornerLargeMapCoords.x + 0.50) * smallLargeProportion) / 2 * 2, 3, smallLargeProportion / 2);
+                }
+                if (largeMap[row][col].getRivers()[2]) {
+                    riverAttempt(smallMap, (int) ((row - cornerLargeMapCoords.y + 0.75) * smallLargeProportion), ((col - cornerLargeMapCoords.x + 1) * smallLargeProportion) - 1, 2, smallLargeProportion / 4);
+                }
+                if (largeMap[row][col].getRivers()[4]) {
+                    riverAttempt(smallMap, (int) ((row - cornerLargeMapCoords.y + 0.75) * smallLargeProportion), ((col - cornerLargeMapCoords.x) * smallLargeProportion) + 1, 4, smallLargeProportion / 4);
+                }
             }
         }
     }
@@ -595,63 +644,76 @@ public class Game {
         for (int row = cornerLargeMapCoords.y; row < cornerLargeMapCoords.y + largeMapEdge; row++) {
             for (int col = cornerLargeMapCoords.x; col < cornerLargeMapCoords.x + largeMapEdge; col++) {
                 Terra[] nb = Terra.getNeighbours(col, row, largeMap);
-                if (nb[0]!=null && nb[0].getRivers()[2] && !nb[0].doesAppearInSmallMap() && nb[1]!=null && !nb[1].doesAppearInSmallMap()) {
+                if (nb[0] != null && nb[0].getRivers()[2] && !nb[0].doesAppearInSmallMap() && nb[1] != null && !nb[1].doesAppearInSmallMap()) {
                     riverAttempt(smallMap, 0, (int) ((col - cornerLargeMapCoords.x + 0.75) * smallLargeProportion) / 2 * 2, 2, 0);
                 }
-                if (nb[1]!=null && nb[1].getRivers()[3] && !nb[1].doesAppearInSmallMap() && nb[2]!=null && !nb[2].doesAppearInSmallMap()) {
-                    riverAttempt(smallMap, (row - cornerLargeMapCoords.y) / 2 + smallLargeProportion / 2, smallMap[0].length-1, 3, 0);
+                if (nb[1] != null && nb[1].getRivers()[3] && !nb[1].doesAppearInSmallMap() && nb[2] != null && !nb[2].doesAppearInSmallMap()) {
+                    riverAttempt(smallMap, (row - cornerLargeMapCoords.y) / 2 + smallLargeProportion / 2, smallMap[0].length - 1, 3, 0);
                 }
-                if (nb[2]!=null && nb[2].getRivers()[4] && !nb[2].doesAppearInSmallMap() && nb[3]!=null && !nb[3].doesAppearInSmallMap()) {
-                    riverAttempt(smallMap, smallMap.length-1, (int) ((col - cornerLargeMapCoords.x + 0.75) * smallLargeProportion) / 2 * 2 + 1, 4, 0);
+                if (nb[2] != null && nb[2].getRivers()[4] && !nb[2].doesAppearInSmallMap() && nb[3] != null && !nb[3].doesAppearInSmallMap()) {
+                    riverAttempt(smallMap, smallMap.length - 1, (int) ((col - cornerLargeMapCoords.x + 0.75) * smallLargeProportion) / 2 * 2 + 1, 4, 0);
                 }
-                if (nb[3]!=null && nb[3].getRivers()[5] && !nb[3].doesAppearInSmallMap() && nb[4]!=null && !nb[4].doesAppearInSmallMap()) {
-                    riverAttempt(smallMap, smallMap.length-1, (int) ((col - cornerLargeMapCoords.x + 0.25) * smallLargeProportion) / 2 * 2, 5, 0);
+                if (nb[3] != null && nb[3].getRivers()[5] && !nb[3].doesAppearInSmallMap() && nb[4] != null && !nb[4].doesAppearInSmallMap()) {
+                    riverAttempt(smallMap, smallMap.length - 1, (int) ((col - cornerLargeMapCoords.x + 0.25) * smallLargeProportion) / 2 * 2, 5, 0);
                 }
-                if (nb[4]!=null && nb[4].getRivers()[0] && !nb[4].doesAppearInSmallMap() && nb[5]!=null && !nb[5].doesAppearInSmallMap()) {
+                if (nb[4] != null && nb[4].getRivers()[0] && !nb[4].doesAppearInSmallMap() && nb[5] != null && !nb[5].doesAppearInSmallMap()) {
                     riverAttempt(smallMap, (row - cornerLargeMapCoords.y) / 2 + smallLargeProportion / 2, 0, 0, 0);
                 }
-                if (nb[5]!=null && nb[5].getRivers()[1] && !nb[5].doesAppearInSmallMap() && nb[0]!=null && !nb[0].doesAppearInSmallMap()) {
+                if (nb[5] != null && nb[5].getRivers()[1] && !nb[5].doesAppearInSmallMap() && nb[0] != null && !nb[0].doesAppearInSmallMap()) {
                     riverAttempt(smallMap, 0, (int) ((col - cornerLargeMapCoords.x + 0.25) * smallLargeProportion) / 2 * 2 + 1, 1, 0);
                 }
             }
         }
     }
 
-    
     // this method tries to create a river including the hex given in row,col
     // source is tried to be located at distance away from the given hex
     private void riverAttempt(Terra[][] map, int row, int col, int direction, int distance) {
-        Point primarySource = Terra.getNeighbourArrayIndecesNoNulls(row, col, map)[(direction+5)%6];
-        for(int i = 0; i < distance/2; i++){
-            primarySource = Terra.getNeighbourArrayIndecesNoNulls(primarySource.x, primarySource.y, map)[(direction+5)%6];
-            primarySource = Terra.getNeighbourArrayIndecesNoNulls(primarySource.x, primarySource.y, map)[(direction+4)%6];
+        Point primarySource = Terra.getNeighbourArrayIndecesNoNulls(row, col, map)[(direction + 5) % 6];
+        for (int i = 0; i < distance / 2; i++) {
+            primarySource = Terra.getNeighbourArrayIndecesNoNulls(primarySource.x, primarySource.y, map)[(direction + 5) % 6];
+            primarySource = Terra.getNeighbourArrayIndecesNoNulls(primarySource.x, primarySource.y, map)[(direction + 4) % 6];
         }
-        Point secondarySource = Terra.getNeighbourArrayIndecesNoNulls(row, col, map)[(direction+1)%6];
-        for(int i = 0; i < distance/2; i++){
-            secondarySource = Terra.getNeighbourArrayIndecesNoNulls(secondarySource.x, secondarySource.y, map)[(direction+1)%6];
-            secondarySource = Terra.getNeighbourArrayIndecesNoNulls(secondarySource.x, secondarySource.y, map)[(direction+2)%6];
+        Point secondarySource = Terra.getNeighbourArrayIndecesNoNulls(row, col, map)[(direction + 1) % 6];
+        for (int i = 0; i < distance / 2; i++) {
+            secondarySource = Terra.getNeighbourArrayIndecesNoNulls(secondarySource.x, secondarySource.y, map)[(direction + 1) % 6];
+            secondarySource = Terra.getNeighbourArrayIndecesNoNulls(secondarySource.x, secondarySource.y, map)[(direction + 2) % 6];
         }
-        int trial = continueRiver(primarySource.x, primarySource.y, map, (direction+1)%6);
-        if (trial != 2)
-                trial = continueRiver(secondarySource.x, secondarySource.y, map, (direction+4)%6);
-        if(trial != 2){ 
+        int trial = continueRiver(primarySource.x, primarySource.y, map, (direction + 1) % 6);
+        if (trial != 2) {
+            trial = continueRiver(secondarySource.x, secondarySource.y, map, (direction + 4) % 6);
+        }
+        if (trial != 2) {
             // add padding for breadth first search, otherwise stops at borderplaces
-            Terra[][] tMap = new Terra[map.length+2][map[0].length+2];
-            for(int i = -1; i <= map.length; i++)
-                for(int j = -1; j <= map[0].length; j++){
+            Terra[][] tMap = new Terra[map.length + 2][map[0].length + 2];
+            for (int i = -1; i <= map.length; i++) {
+                for (int j = -1; j <= map[0].length; j++) {
                     Terra t = GM.getMatrix(map, i, j);
-                    if(t == null)
+                    if (t == null) {
                         t = new Province(j, i);
-                    tMap[i+1][j+1] = t;
-                } 
-            try{
+                    }
+                    tMap[i + 1][j + 1] = t;
+                }
+            }
+            try {
                 Terra.randomBreadthFirstSearchWithObstacles(
-                    (Terra t)->{return continueRiver(t.coord.row, t.coord.col, map, (direction+1)%6) == 2;},
-                    (Terra t)->{return t != null;}, tMap, new Point(primarySource.x+1, primarySource.y+1));
-            } catch(ArrayIndexOutOfBoundsException e) {
+                        (Terra t) -> {
+                            return continueRiver(t.coord.row, t.coord.col, map, (direction + 1) % 6) == 2;
+                        },
+                        (Terra t) -> {
+                            return t != null;
+                        }, tMap, new Point(primarySource.x + 1, primarySource.y + 1));
+            } catch (ArrayIndexOutOfBoundsException e) {
                 Terra.randomBreadthFirstSearchWithObstacles(
-                    (Terra t)->{return continueRiver(t.coord.row, t.coord.col, map, (direction+4)%6) == 2;},
-                    (Terra t)->{return t != null;}, tMap, new Point(secondarySource.x+1, secondarySource.y+1));
+                        (Terra t) -> {
+                            return continueRiver(t.coord.row, t.coord.col, map, (direction + 4) % 6) == 2;
+                        },
+                        (Terra t) -> {
+                            return t != null;
+                        }, tMap, new Point(secondarySource.x + 1, secondarySource.y + 1));
+            }
+        }
+    }
             }
         }
     }
