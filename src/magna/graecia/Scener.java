@@ -179,7 +179,6 @@ public class Scener {
             }
         });
         for (int i = 0; i < Settings.numberOfSettings; i++) {
-            root.getChildren().add(settings[i]);
             settingDescriptions[i].setFont(Font.font("Albertus Medium", 13));
             settingChoices[i].setFont(Font.font("Albertus Medium", 13));
             HBox t = new HBox(settingDescriptions[i], settingChoices[i]);
@@ -188,6 +187,7 @@ public class Scener {
             t.setStyle("-fx-border-color:  #545454; -fx-background-color: #EE9900;");
             t.setAlignment(Pos.CENTER);
             root.getChildren().add(t);
+            root.getChildren().add(settings[i]);
         }
 
         root.getChildren().add(createGameButton);
