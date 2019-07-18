@@ -41,9 +41,9 @@ public class Province extends Terra {
         setPopulation(0);
     }
 
-    public Province(TerrainType t, Resource r, int pop, int x, int y, City c, double altitude) {
+    public Province(TerrainType t, Resource r, int pop, int row, int col, City c, double altitude) {
         //initial settlements around the city
-        super(x, y);
+        super(col, row);
         setTerrain(t);
         setProducedResource(r);
         setPopulation(pop);
@@ -52,9 +52,9 @@ public class Province extends Terra {
         setName(provinceNamesList[privateSeed.nextInt(provinceNamesList.length)]);
     }
 
-    public Province(Terra t, Random seed, Resources r, int x, int y) {
+    public Province(Terra t, Random seed, Resources r, int row, int col) {
         //newly created province, without neighbour effect
-        super(x, y);
+        super(col, row);
         setTerrain(t.getTerrain());
         setProducedResource(getRandomResorceForTerrain(t.getTerrain(), seed, r));
         setPopulation(0);

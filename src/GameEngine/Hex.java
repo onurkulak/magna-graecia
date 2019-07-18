@@ -6,7 +6,7 @@
 package GameEngine;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.awt.Point;
 
 /**
  *
@@ -169,6 +169,15 @@ class OffsetCoord
         this.col = col;
         this.row = row;
     }
+    
+    public Point getPoint() {
+        return new Point(col,row);
+    }
+    
+    public Point getIndexPoint() {
+        return new Point(row,col);
+    }
+    
     public final int col;
     public final int row;
     static public int EVEN = 1;

@@ -34,8 +34,9 @@ public class Game {
     private Random seed;
     private int smallLargeProportion, largeMapEdge, cityCountInSmallMap;
 
+    // p.x is col, p.y is row
     private Point cornerLargeMapCoords;
-    
+
     public Game(Settings gameSetup) throws FileNotFoundException {
         smallLargeProportion = 2 * (1 + gameSetup.getSmallMapSize());
         setup = gameSetup;
@@ -94,7 +95,7 @@ public class Game {
                             largeMap[i / smallLargeProportion + p.y][j / smallLargeProportion + p.x],
                             getProvinceRegionTerrainSimilarity(), getProvinceRegionResourceSimilarity(),
                             getProvinceTerrainNeighbourhoodSimilarity(), getProvinceNeighbourhoodResourceSimilarity(),
-                            (i / smallLargeProportion + p.x + .0) / largeMapEdge, seed,
+                            (i / smallLargeProportion + p.y + .0) / largeMapEdge, seed,
                             provinceNames[seed.nextInt(provinceNames.length)], resources,
                             j, i);
                 }
@@ -199,8 +200,8 @@ public class Game {
                         for (int pathIterator = 1; pathIterator < nearestSeaPath.size() - 1; pathIterator++) {
                             smallMap[nearestSeaPath.get(pathIterator).y][nearestSeaPath.get(pathIterator).x]
                                     = new Province(Terra.TerrainType.SEA, null, 0,
-                                            nearestSeaPath.get(pathIterator).x,
-                                            nearestSeaPath.get(pathIterator).y, null, 
+                                            nearestSeaPath.get(pathIterator).y,
+                                            nearestSeaPath.get(pathIterator).x, null,
                                             smallMap[nearestSeaPath.get(0).y][nearestSeaPath.get(0).x].getPseudoAltitude());
                         }
                     }
@@ -220,7 +221,7 @@ public class Game {
                     if (seaX >= smallMapSize - 2) {
                         seaX = smallMapSize - 3;
                     }
-                    smallMap[seaY][seaX] = new Province(Terra.TerrainType.SEA, null, 0, seaX, seaY, null, largeMap[i + p.y][j + p.x].getPseudoAltitude());
+                    smallMap[seaY][seaX] = new Province(Terra.TerrainType.SEA, null, 0, seaY, seaX, null, largeMap[i + p.y][j + p.x].getPseudoAltitude());
 
                     Point p1 = Terra.getNeighbourArrayIndeces(seaY, seaX, smallMap)[seed.nextInt(6)];
                     Point p2 = Terra.getNeighbourArrayIndeces(seaY, seaX, smallMap)[seed.nextInt(6)];
