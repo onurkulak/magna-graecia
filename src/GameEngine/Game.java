@@ -30,9 +30,10 @@ public class Game {
     private final Resources resources;
     private Unit[] allUnits;
     private Building[] buildings;
-    private String[] regionNames, provinceNames; //implement these
+    private String[] regionNames, provinceNames;
     private Random seed;
-    private int smallLargeProportion;
+    private int smallLargeProportion, largeMapEdge, cityCountInSmallMap;
+
     private Point cornerLargeMapCoords;
     
     public Game(Settings gameSetup) throws FileNotFoundException {
@@ -54,19 +55,19 @@ public class Game {
 
     private void initializeSmallerMap() {
         int smallMapDesiredCityCount = setup.getSmallMapSize() + 2;
-        int cityCount = findSmallerMapArea(smallMapDesiredCityCount, cornerLargeMapCoords);
+        cityCountInSmallMap = findSmallerMapArea(smallMapDesiredCityCount, cornerLargeMapCoords);
         //so parameter is a minimum of 3 always
         //small maps large map equivalent's top left corner is stored in p
 
         //omitted for a while to see actual large maps
-        if (cityCount == -1) {
+        if (cityCountInSmallMap == -1) {
             System.out.println("err couldn't file appropriate place");
             initializeMap();
             //if no appropriate large map is created, tries to create maps again
             return;
         }
 
-        int largeMapEdge = getEdgeLengthFromCityCount(cityCount);
+        largeMapEdge = getEdgeLengthFromCityCount(cityCountInSmallMap);
 
         int smallMapEdge = largeMapEdge * smallLargeProportion;
         //assuming every hex on strategy map corresponds to 4*4 hexes on small map

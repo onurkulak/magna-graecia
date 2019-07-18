@@ -49,14 +49,25 @@ import javafx.scene.input.MouseEvent;
  */
 public class Scener {
 
-    private static int edgeLength = 36;
-
+    private static int smallMapEdgeLength = 36;
+    private static int largeMapEdgeLength = 36;
+    
+    private static ScrollPane smallMapScrollPane;
+    private static ScrollPane largeMapScrollPane;
+    
     /*
      first is show resources, second is show borders, third is show armies, forth is population
      */
+    private final static boolean[] smallMapDisplaySettings = new boolean[4];
+
+    /*
+     first is show resources, second is show territories, third is show small map regions
+     */
+    private final static boolean[] largeMapDisplaySettings = new boolean[3];
+
+    private static Layout largeMapHexLayout;
     private static Layout smallMapHexLayout;
     private final static int paddingCoefficient = 2;
-    private final static boolean[] smallMapDisplaySettings = new boolean[4];
     private final static String menuBackground = "/files/bg/menu.jpg";
     private final static String newGameBackground = "/files/bg/newgame.jpg";
     private final static String switchSmallMapLayer = "/files/smallTextures/smallMap.jpg";
@@ -130,7 +141,6 @@ public class Scener {
         Label[] settingDescriptions = new Label[]{
             new Label("small map size\t:\t"),
             new Label("large map size\t:\t"),
-            new Label("number of city states\t:\t"),
             new Label("number of hellenic factions\t:\t"),
             new Label("number of intervener powers\t:\t"),
             new Label("battle difficulty\t:\t"),
@@ -148,8 +158,7 @@ public class Scener {
                         (int) settings[2].getValue(),
                         (int) settings[3].getValue(),
                         (int) settings[4].getValue(),
-                        (int) settings[5].getValue(),
-                        (int) settings[6].getValue()
+                        (int) settings[5].getValue()
                 );
                 Game openGame;
                 try {
@@ -197,14 +206,14 @@ public class Scener {
 
         Button switchSmall = new MenuImageButton(switchSmallMapLayer);
         Button switchLarge = new MenuImageButton(switchLargeMapLayer);
-        Button switchTech = new MenuImageButton(Scener.switchTech);
-        Button switchTrade = new MenuImageButton(Scener.switchTrade);
-        Button switchPolitics = new MenuImageButton(Scener.switchPolitics);
+        Button switchTechLayer = new MenuImageButton(Scener.switchTech);
+        Button switchTradeLayer = new MenuImageButton(Scener.switchTrade);
+        Button switchPoliticsLayer = new MenuImageButton(Scener.switchPolitics);
         Button switchMenu = new MenuImageButton(quitGameLayer);
 
         HBox tabs = new HBox((s.getWidth() - 6 * switchSmall.getWidth()) / 20);
         tabs.setAlignment(Pos.CENTER);
-        tabs.getChildren().addAll(switchSmall, switchLarge, switchTrade, switchTech, switchPolitics, switchMenu);
+        tabs.getChildren().addAll(switchSmall, switchLarge, switchTradeLayer, switchTechLayer, switchPoliticsLayer, switchMenu);
 
         switchSmall.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -224,19 +233,19 @@ public class Scener {
                 s.setRoot(menu);
             }
         });
-        switchTech.setOnAction(new EventHandler<ActionEvent>() {
+        switchTechLayer.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 switchTechLayer(openGame, bp);
             }
         });
-        switchTrade.setOnAction(new EventHandler<ActionEvent>() {
+        switchTradeLayer.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 switchTradeLayer(openGame, bp);
             }
         });
-        switchPolitics.setOnAction(new EventHandler<ActionEvent>() {
+        switchPoliticsLayer.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 switchPoliticsLayer(openGame, bp);
@@ -244,53 +253,56 @@ public class Scener {
         });
         return tabs;
     }
-
+    
     private static void switchSmallMap(Game openGame, BorderPane bp) {
-        ScrollPane sp = new ScrollPane();
-        sp.setVbarPolicy(ScrollBarPolicy.NEVER);
-        sp.setHbarPolicy(ScrollBarPolicy.NEVER);
+        bp.setRight(null);
+        bp.setLeft(null);
+        
+        if (smallMapScrollPane == null){
+            smallMapScrollPane = new ScrollPane();
+            smallMapScrollPane.setVbarPolicy(ScrollBarPolicy.NEVER);
+            smallMapScrollPane.setHbarPolicy(ScrollBarPolicy.NEVER);
+        }
         Canvas canvas = new Canvas(0, 0);
         GraphicsContext gc = canvas.getGraphicsContext2D();
         drawSmallMapCanvas(openGame, gc);
-        sp.setContent(canvas);
-        bp.setCenter(sp);
+        smallMapScrollPane.setContent(canvas);
+        bp.setCenter(smallMapScrollPane);
         HBox bottomPanel;
         Label l = getTerrainInfoLabel();
         
-        canvas.setOnMouseClicked(new EventHandler<MouseEvent>()
-        {
-            public void handle(MouseEvent e)
-            {
+        canvas.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            public void handle(MouseEvent e) {
                 Point coords = smallMapHexLayout.pixelToHex(e.getX(), e.getY());
-                
+
                 //debug part
                 System.out.println(e.getX() + " " + e.getY());
                 System.out.println(coords.x);
                 System.out.println(coords.y);
-                
-                bp.setRight(openGame.smallMap[coords.y][coords.x].getConstructionPanel());
+
+                if (GM.getMatrix(openGame.smallMap, coords.y, coords.x)!=null)
+                    bp.setRight(openGame.smallMap[coords.y][coords.x].getConstructionPanel());
             }
         });
-        
-        canvas.setOnMouseMoved(new EventHandler<MouseEvent>()
-        {
-            public void handle(MouseEvent e)
-            {
+
+        canvas.setOnMouseMoved(new EventHandler<MouseEvent>() {
+            public void handle(MouseEvent e) {
                 Point coords = smallMapHexLayout.pixelToHex(e.getX(), e.getY());
-                if(coords.y < openGame.smallMap.length && coords.x < openGame.smallMap[0].length)
+                if (GM.getMatrix(openGame.smallMap, coords.y, coords.x)!=null) {
                     l.setText(openGame.smallMap[coords.y][coords.x].getInfo());
+                }
             }
         });
-        
-        Slider zoom = new Slider(18, 360, edgeLength);
+
+        Slider zoom = new Slider(18, 360, smallMapEdgeLength);
         zoom.valueProperty().addListener(new ChangeListener() {
             @Override
             public void changed(ObservableValue arg0, Object arg1, Object arg2) {
-                if (edgeLength == (int) zoom.getValue()) {
+                if (smallMapEdgeLength == (int) zoom.getValue()) {
                     return;
                 }
                 zoom.setValue((int) zoom.getValue() / 18 * 18);
-                edgeLength = (int) zoom.getValue();
+                smallMapEdgeLength = (int) zoom.getValue();
                 drawSmallMapCanvas(openGame, gc);
             }
         });
@@ -304,7 +316,7 @@ public class Scener {
             displayChoices[i].selectedProperty().addListener(new ChangeListener<Boolean>() {
                 public void changed(ObservableValue<? extends Boolean> ov,
                         Boolean old_val, Boolean new_val) {
-                    refreshDisplayChoices(displayChoices);
+                    refreshDisplayChoices(displayChoices, smallMapDisplaySettings);
                     drawSmallMapCanvas(openGame, gc);
                 }
             });
@@ -326,32 +338,40 @@ public class Scener {
     }
 
     private static void drawSmallMapCanvas(Game openGame, GraphicsContext gc) {
+        //refresh layout
+        smallMapHexLayout = new Layout(Layout.flat, smallMapEdgeLength, smallMapEdgeLength * 2 / Math.sqrt(3),
+                smallMapEdgeLength * paddingCoefficient / 2, smallMapEdgeLength * paddingCoefficient / 2);
 
+        //draw map
+        drawMapCanvas(gc, openGame.smallMap, smallMapEdgeLength, smallMapDisplaySettings);
+
+        //draw borders using wall graphics
+        if (smallMapDisplaySettings[1]) {
+            drawBorders(openGame, gc);
+        }
+    }
+
+    private static void drawMapCanvas(GraphicsContext gc, Terra[][] map, int edgeLength, boolean[] displaySettings) {
         gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
-        double graphicalWidth = (openGame.smallMap.length * 1.5 + 0.5 + paddingCoefficient) * edgeLength;
-        double graphicalHeight = (openGame.smallMap[0].length * 2 + 1 + paddingCoefficient) * edgeLength;
+        double graphicalWidth = (map[0].length * 1.5 + 0.5 + paddingCoefficient) * edgeLength;
+        double graphicalHeight = (map.length * 2 + 1 + paddingCoefficient) * edgeLength;
         gc.getCanvas().setWidth(graphicalWidth);
         gc.getCanvas().setHeight(graphicalHeight);
-        smallMapHexLayout = new Layout(Layout.flat, edgeLength, edgeLength * 2 / Math.sqrt(3),
-                edgeLength*paddingCoefficient/2 , edgeLength*paddingCoefficient/2);
-        
+
         //add padding
-        gc.getCanvas().setTranslateX(edgeLength*paddingCoefficient/2);
-        gc.getCanvas().setTranslateY(edgeLength*paddingCoefficient/2);
-        
-        for (int i = 0; i < openGame.smallMap.length; i++) {
-            for (int j = 0; j < openGame.smallMap[0].length; j++) {
+        gc.getCanvas().setTranslateX(edgeLength * paddingCoefficient / 2);
+        gc.getCanvas().setTranslateY(edgeLength * paddingCoefficient / 2);
+
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[0].length; j++) {
                 int x, y;
                 x = edgeLength * j * 3 / 2;
                 y = edgeLength * (i * 2);
                 if (j % 2 == 1) {
                     y += edgeLength;
                 }
-                openGame.smallMap[i][j].draw(gc, x, y, edgeLength, smallMapDisplaySettings);
+                map[i][j].draw(gc, x, y, edgeLength, displaySettings);
             }
-        }
-        if (smallMapDisplaySettings[1]) {
-            drawBorders(openGame, gc);
         }
     }
 
@@ -377,18 +397,87 @@ public class Scener {
     }
 
     private static void drawSpecificEdge(int col, int row, Game openGame, int borderEdgeID, GraphicsContext gc) {
-        int x = edgeLength * col * 3 / 2;
-        int y = edgeLength * (row * 2);
+        int x = smallMapEdgeLength * col * 3 / 2;
+        int y = smallMapEdgeLength * (row * 2);
         if ((col & 1) == 1) {
-            y += edgeLength;
+            y += smallMapEdgeLength;
         }
         if (Province.drawGivenBorders(Terra.getNeighbours(col, row, openGame.smallMap),
-                GM.getMatrix(openGame.smallMap, row, col), borderEdgeID, gc, edgeLength, x, y));
-            //System.out.println(col +" "+ row +" "+ borderEdgeID);
+                GM.getMatrix(openGame.smallMap, row, col), borderEdgeID, gc, smallMapEdgeLength, x, y));
+        //System.out.println(col +" "+ row +" "+ borderEdgeID);
     }
 
     private static void switchLargeMap(Game openGame, BorderPane bp) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        bp.setRight(null);
+        bp.setLeft(null);
+
+        if (largeMapScrollPane == null){
+            largeMapScrollPane = new ScrollPane();
+            largeMapScrollPane.setVbarPolicy(ScrollBarPolicy.NEVER);
+            largeMapScrollPane.setHbarPolicy(ScrollBarPolicy.NEVER);
+        }
+        Canvas canvas = new Canvas(0, 0);
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        drawLargeMapCanvas(openGame, gc);
+        largeMapScrollPane.setContent(canvas);
+        bp.setCenter(largeMapScrollPane);
+        HBox bottomPanel;
+        Label l = getTerrainInfoLabel();
+
+        canvas.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            public void handle(MouseEvent e) {
+                Point coords = largeMapHexLayout.pixelToHex(e.getX(), e.getY());
+
+                //debug part
+                System.out.println(e.getX() + " " + e.getY());
+                System.out.println(coords.x);
+                System.out.println(coords.y);
+
+                //there will be diplomacy screen instead
+                //bp.setRight(openGame.largeMap[coords.y][coords.x].getConstructionPanel());
+            }
+        });
+
+        canvas.setOnMouseMoved(new EventHandler<MouseEvent>() {
+            public void handle(MouseEvent e) {
+                Point coords = largeMapHexLayout.pixelToHex(e.getX(), e.getY());
+                if (GM.getMatrix(openGame.largeMap, coords.y, coords.x)!=null) {
+                    l.setText(openGame.largeMap[coords.y][coords.x].getInfo());
+                }
+            }
+        });
+
+        Slider zoom = new Slider(18, 360, largeMapEdgeLength);
+        zoom.valueProperty().addListener(new ChangeListener() {
+            @Override
+            public void changed(ObservableValue arg0, Object arg1, Object arg2) {
+                if (largeMapEdgeLength == (int) zoom.getValue()) {
+                    return;
+                }
+                zoom.setValue((int) zoom.getValue() / 18 * 18);
+                largeMapEdgeLength = (int) zoom.getValue();
+                drawLargeMapCanvas(openGame, gc);
+            }
+        });
+
+        zoom.setMaxWidth(s.getWidth() / 4);
+        // do faction coloring..
+        CheckBox[] displayChoices = new CheckBox[]{
+            new CheckBox("display resources"), new CheckBox("display factions"),
+            new CheckBox("display small map regions")};
+        for (int i = 0; i < displayChoices.length; i++) {
+            displayChoices[i].setSelected(largeMapDisplaySettings[i]);
+            displayChoices[i].selectedProperty().addListener(new ChangeListener<Boolean>() {
+                public void changed(ObservableValue<? extends Boolean> ov,
+                        Boolean old_val, Boolean new_val) {
+                    refreshDisplayChoices(displayChoices, largeMapDisplaySettings);
+                    drawLargeMapCanvas(openGame, gc);
+                }
+            });
+        }
+        VBox checkboxes = new VBox(displayChoices);
+        bottomPanel = new HBox(20, l, zoom, checkboxes);
+        bp.setBottom(bottomPanel);
     }
 
     private static void switchTechLayer(Game openGame, BorderPane bp) {
@@ -403,9 +492,18 @@ public class Scener {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    private static void refreshDisplayChoices(CheckBox[] displayChoices) {
-        for (int i = 0; i < smallMapDisplaySettings.length; i++) {
-            smallMapDisplaySettings[i] = displayChoices[i].isSelected();
+    private static void refreshDisplayChoices(CheckBox[] displayChoices, boolean[] settings) {
+        for (int i = 0; i < settings.length; i++) {
+            settings[i] = displayChoices[i].isSelected();
         }
+    }
+
+    private static void drawLargeMapCanvas(Game openGame, GraphicsContext gc) {
+        //refresh layout
+        largeMapHexLayout = new Layout(Layout.flat, largeMapEdgeLength, largeMapEdgeLength * 2 / Math.sqrt(3),
+                largeMapEdgeLength * paddingCoefficient / 2, largeMapEdgeLength * paddingCoefficient / 2);
+
+        //draw map
+        drawMapCanvas(gc, openGame.largeMap, largeMapEdgeLength, largeMapDisplaySettings);
     }
 }
