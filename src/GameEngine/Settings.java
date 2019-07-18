@@ -12,9 +12,9 @@ package GameEngine;
 public class Settings {
     private int smallMapSize, largeMapSize;
     private int battleDifficulty, strategyDifficulty;
-    private int numberOfCityStates, numberOfSuperPowers, numberOfForeignPowers;
-    public final static int numberOfSettings = 7;
-    public Settings(int smallMapSize, int largeMapSize, int numberOfCityStates, int numberOfSuperPowers, int numberOfForeignPowers, int battleDifficulty, int strategyDifficulty) {
+    private int numberOfSuperPowers, numberOfForeignPowers;
+    public final static int numberOfSettings = 6;
+    public Settings(int smallMapSize, int largeMapSize, int numberOfForeignPowers, int numberOfSuperPowers, int battleDifficulty, int strategyDifficulty) {
         this.smallMapSize = smallMapSize;
         this.largeMapSize = largeMapSize;
         this.numberOfSuperPowers = numberOfSuperPowers;
@@ -53,14 +53,6 @@ public class Settings {
 
     public void setStrategyDifficulty(int strategyDifficulty) {
         this.strategyDifficulty = strategyDifficulty;
-    }
-
-    public int getNumberOfCityStates() {
-        return numberOfCityStates;
-    }
-
-    public void setNumberOfCityStates(int numberOfCityStates) {
-        this.numberOfCityStates = numberOfCityStates;
     }
 
     public int getNumberOfSuperPowers() {

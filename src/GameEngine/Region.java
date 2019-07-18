@@ -15,6 +15,7 @@ import javafx.scene.image.Image;
 public class Region extends Terra{
     
     private boolean appearsInSmallMap;
+    private City smallMapCity;
     
     //by latitude I mean 1 if it's the bottom row, 0 if top
     Region(String name, double latitude, Terra[] neighbours, 
@@ -72,5 +73,13 @@ public class Region extends Terra{
         gc.drawImage(new Image(
                 "files/terrain/mask.png", edgeLength * 2, edgeLength * 2, true, true),
                 x, y);
+    }
+
+    public City getSmallMapCity() {
+        return smallMapCity;
+    }
+
+    public void setSmallMapCity(City smallMapCity) {
+        this.smallMapCity = smallMapCity;
     }
 }

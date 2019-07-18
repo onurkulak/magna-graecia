@@ -11,7 +11,6 @@ import javafx.scene.image.Image;
 import java.util.function.Function;
 import java.util.ArrayList;
 import java.awt.Point;
-import java.util.Arrays;
 
 /**
  *
@@ -62,6 +61,7 @@ public abstract class Terra {
         coord = new OffsetCoord(x, y);
     }
 
+    
     public static ArrayList<Point> randomBreadthFirstSearchWithObstacles(
             Function<Terra, Boolean> searchCondition,
             Function<Terra, Boolean> passableCondition,
@@ -109,6 +109,37 @@ public abstract class Terra {
             reconstructResult(resultConstructor, resultPath);
         }
         return resultPath;
+    }
+
+    public static ArrayList<Point> adjacentAreaFinder(
+            Function<Terra, Boolean> areaCondition,
+            Terra[][] map, Point startingPoint) {
+        boolean[][] visitBitMap = new boolean[map.length][map[0].length];
+        ArrayList<Point> visitQueue = new ArrayList<>();
+        ArrayList<Point> theArea = new ArrayList<>();
+        GM.swapPoint(startingPoint);
+        visitQueue.add(startingPoint);
+        visitBitMap[startingPoint.y][startingPoint.x] = true;
+        
+        // for the called area, the area condition must hold too
+        if (areaCondition.apply(map[startingPoint.y][startingPoint.x])) {
+            theArea.add(startingPoint);
+            do {
+                Point p = visitQueue.remove(visitQueue.size() - 1);
+                Point[] neighbours = getNeighbourArrayIndeces(p.y, p.x, map);
+                for (Point n : neighbours) {
+                    if (n != null) {
+                        GM.swapPoint(n);
+                    }
+                    if (n != null && !visitBitMap[n.y][n.x] && areaCondition.apply(map[n.y][n.x])) {
+                        visitQueue.add(n);
+                        visitBitMap[n.y][n.x] = true;
+                        theArea.add(n);
+                    }
+                }
+            } while (!visitQueue.isEmpty());
+        }
+        return theArea;
     }
 
     public static ArrayList<Point> randomAStarWithObstacles(

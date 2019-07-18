@@ -12,4 +12,8 @@ package GameEngine;
 public class AIFaction extends Faction{
     private Civic favoriteCivics;
     private int[] attitudes;
+
+    public AIFaction(Culture culture) {
+        super(culture);
+    }
 }

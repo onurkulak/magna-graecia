@@ -13,7 +13,6 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.effect.DropShadow;
-import javafx.scene.effect.Shadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Background;
@@ -23,9 +22,7 @@ import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
-import magna.graecia.Scener;
 import java.awt.image.BufferedImage;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Pos;
@@ -39,16 +36,31 @@ public class City extends Province {
 
     private ArrayList<BuildingInstance> buildings;
     private ArrayList<Unit> trainQueue;
+    private ArrayList<Province> dominions;
     private CityOrder co = null;
+    private final Region regionEquivalent;
 
-    public City(Terra t, int x, int y) {
+    public City(Region r, int x, int y) {
         super(x, y);
-        setTerrain(t.getTerrain());
+        setTerrain(r.getTerrain());
         buildings = new ArrayList<>();
         trainQueue = new ArrayList<>();
         setCapital(this);
-        setPseudoAltitude(t.getPseudoAltitude());
+        setPseudoAltitude(r.getPseudoAltitude());
+        regionEquivalent = r;
+        dominions = new ArrayList<>();
+        regionEquivalent.setSmallMapCity(this);
     }
+    
+    @Override
+    public void setOwner(Faction f) {
+        super.setOwner(f);
+        for(Province p:dominions)
+            p.setOwner(f);
+    }
+    
+    @Override
+    public void setCapital(City c) {}
 
     @Override
     public void draw(GraphicsContext gc, int x, int y, int edgeLength, boolean[] displaySettings) {
@@ -233,5 +245,13 @@ public class City extends Province {
             this.b = b;
             this.buildOrRemove = false;
         }
+    }
+
+    public ArrayList<Province> getDominions() {
+        return dominions;
+    }
+
+    public Region getRegionEquivalent() {
+        return regionEquivalent;
     }
 }

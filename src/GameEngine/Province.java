@@ -174,6 +174,12 @@ public class Province extends Terra {
 
     public void setCapital(City capital) {
         this.capital = capital;
+        if(capital == null)
+            setOwner(null);
+        else {
+            setOwner(capital.getOwner());
+            capital.getDominions().add(this);
+        }
     }
 
     public String getInfo() {

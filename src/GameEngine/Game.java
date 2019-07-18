@@ -45,6 +45,7 @@ public class Game {
         readNames();
         cornerLargeMapCoords = new Point();
         initializeMap();
+        initializeFactions();
     }
 
     private void initializeMap() {
@@ -714,6 +715,106 @@ public class Game {
             }
         }
     }
+
+    private void initializeFactions() {
+        ArrayList<Culture> landCultures = Culture.getImperialCultures();
+        ArrayList<Culture> seaCultures = Culture.getMaritimeCultures();
+        player = new Faction(seaCultures.get(seed.nextInt(seaCultures.size())));
+        ArrayList<City> cities = new ArrayList<>();
+        for (int i = 0; i < largeMapEdge; i++) {
+            for (int j = 0; j < largeMapEdge; j++) {
+                if (largeMap[cornerLargeMapCoords.y + i][cornerLargeMapCoords.x + j].getSmallMapCity() != null) {
+                    cities.add(largeMap[cornerLargeMapCoords.y + i][cornerLargeMapCoords.x + j].getSmallMapCity());
+                }
+            }
+        }
+        System.out.println(cities.size());
+        // large nations that also exist in small map are created
+        for (int i = 0; i < setup.getNumberOfSuperPowers(); i++) {
+            Culture cult = landCultures.remove(seed.nextInt(landCultures.size()));
+            AIFaction faction = new AIFaction(cult);
+            City foothold = cities.remove(seed.nextInt(cities.size()));
+            foothold.setOwner(faction);
+            Region mainRegion = foothold.getRegionEquivalent();
+            mainRegion.setOwner(faction);
+            System.out.println(foothold.coord.getIndexPoint());
+            System.out.println(mainRegion.coord.getIndexPoint());
+
+            // other than the city in magna graecia
+            int initialRegionCount = seed.nextInt(5) + 1;
+            System.out.println("Created superpower " + cult.getCountryName() + " with " + (initialRegionCount + 1) + " regions");
+            for (int j = 0; j < initialRegionCount; j++) {
+                Point closestMainLand
+                        = Terra.randomBreadthFirstSearchWithObstacles(
+                                (Terra t) -> {
+                                    return t != null && isLand(t) && t.getOwner() == null && !t.doesAppearInSmallMap();
+                                },
+                                (Terra t) -> {
+                                    return t != null && (t.getOwner() == null || t.getOwner() == faction);
+                                }, largeMap, mainRegion.coord.getIndexPoint()).get(0);
+                mainRegion = largeMap[closestMainLand.y][closestMainLand.x];
+                GM.swapPoint(closestMainLand);
+                System.out.println(foothold.coord.getPoint());
+                mainRegion.setOwner(faction);
+            }
+        }
+
+        // player faction is created, but first initialize the player..
+        City playerCity = cities.remove(seed.nextInt(cities.size()));
+        playerCity.setOwner(player);
+        playerCity.getRegionEquivalent().setOwner(player);
+
+        // city states are created
+        for (City c : cities) {
+            Culture cult = seaCultures.get(seed.nextInt(seaCultures.size()));
+            AIFaction faction = new AIFaction(cult);
+            c.setOwner(faction);
+            c.getRegionEquivalent().setOwner(faction);
+        }
+
+        for (int i = 0; i < setup.getNumberOfForeignPowers(); i++) {
+            // a city state civ is created
+            if (seed.nextInt(landCultures.size() + seaCultures.size()) < seaCultures.size()) {
+                Culture cult = seaCultures.get(seed.nextInt(seaCultures.size()));
+                AIFaction faction = new AIFaction(cult);
+                Point randomCity = new Point(seed.nextInt(largeMap.length), seed.nextInt(largeMap[0].length));
+                randomCity
+                            = Terra.randomBreadthFirstSearchWithObstacles(
+                                    (Terra t) -> {
+                                        return t != null && isLand(t) && t.getOwner() == null && !t.doesAppearInSmallMap() && coastalTile(largeMap, t.coord.col, t.coord.row);
+                                    },
+                                    (Terra t) -> {
+                                        return t != null;
+                                    }, largeMap, randomCity).get(0);
+                    Region mainRegion = largeMap[randomCity.y][randomCity.x];
+                    mainRegion.setOwner(faction);
+                    
+                    GM.swapPoint(randomCity);
+                    System.out.println("Created city-state in " + randomCity);
+            
+            } else {
+                Culture cult = landCultures.remove(seed.nextInt(landCultures.size()));
+                AIFaction faction = new AIFaction(cult);
+
+                Point closestMainLand = new Point(seed.nextInt(largeMap.length), seed.nextInt(largeMap[0].length));
+
+                int initialRegionCount = seed.nextInt(5) + 2;
+                System.out.println("Created superpower " + cult.getCountryName() + " with " + (initialRegionCount) + " regions");
+            
+                for (int j = 0; j < initialRegionCount; j++) {
+                    closestMainLand
+                            = Terra.randomBreadthFirstSearchWithObstacles(
+                                    (Terra t) -> {
+                                        return t != null && isLand(t) && t.getOwner() == null && !t.doesAppearInSmallMap();
+                                    },
+                                    (Terra t) -> {
+                                        return t != null;
+                                    }, largeMap, closestMainLand).get(0);
+                    Region mainRegion = largeMap[closestMainLand.y][closestMainLand.x];
+                    GM.swapPoint(closestMainLand);
+                    System.out.println(closestMainLand);
+                    mainRegion.setOwner(faction);
+                }
             }
         }
     }
