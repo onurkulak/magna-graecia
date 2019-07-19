@@ -27,7 +27,7 @@ class Resources {
         livestock = new Resource("livestock", 2, Resource.ResourceTypes.EDIBLE);
 
         dye = new Resource("dye", 4, Resource.ResourceTypes.LUXURY);
-        salt = new Resource("salt", 1, Resource.ResourceTypes.MATERIAL);
+        salt = new Resource("salt", 2, Resource.ResourceTypes.MATERIAL);
         spice = new Resource("spice", 5, Resource.ResourceTypes.LUXURY);
 
         iron = new Resource("iron", 2, Resource.ResourceTypes.MATERIAL);
