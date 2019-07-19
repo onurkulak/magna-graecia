@@ -349,6 +349,9 @@ public class Scener {
         if (smallMapDisplaySettings[1]) {
             drawBorders(openGame, gc);
         }
+        if(smallMapDisplaySettings[3]){
+            drawOverlayPopulations(openGame, gc);
+        }
     }
 
     private static void drawMapCanvas(GraphicsContext gc, Terra[][] map, int edgeLength, boolean[] displaySettings) {
@@ -505,5 +508,20 @@ public class Scener {
 
         //draw map
         drawMapCanvas(gc, openGame.largeMap, largeMapEdgeLength, largeMapDisplaySettings);
+    }
+
+    private static void drawOverlayPopulations(Game openGame, GraphicsContext gc) {
+        Province[][] map = openGame.smallMap;
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[0].length; j++) {
+                int x, y;
+                x = smallMapEdgeLength * j * 3 / 2;
+                y = smallMapEdgeLength * (i * 2);
+                if (j % 2 == 1) {
+                    y += smallMapEdgeLength;
+                }
+                map[i][j].drawPopulation(gc, x, y, smallMapEdgeLength);
+            }
+        }
     }
 }

@@ -11,6 +11,10 @@ import javafx.scene.Node;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import java.awt.Point;
+import javafx.geometry.VPos;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.TextAlignment;
 
 /**
  *
@@ -38,7 +42,7 @@ public class Province extends Terra {
         super(col, row);
         setName(provinceNamesList[privateSeed.nextInt(provinceNamesList.length)]);
         setCapital(null);
-        setPopulation(0);
+        setPopulation(1);
     }
 
     public Province(TerrainType t, Resource r, int pop, int row, int col, City c, double altitude) {
@@ -148,16 +152,24 @@ public class Province extends Terra {
 
     public void draw(GraphicsContext gc, int x, int y, int edgeLength, boolean[] displaySettings) {
         super.draw(gc, x, y, edgeLength, displaySettings);
-        if (displaySettings[3]) {
-            drawPopulation(gc, x, y, edgeLength);
-        }
         if (displaySettings[2] && military != null) {
             military.drawStrategicMap(gc, x, y, edgeLength);
         }
     }
 
-    protected void drawPopulation(GraphicsContext gc, int x, int y, int edgeLength) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void drawPopulation(GraphicsContext gc, int x, int y, int edgeLength) {
+        // only draw population if it's a city or has population
+        if(population == 0 && capital != this)
+            return;
+        gc.setLineWidth(1);
+        gc.setStroke(Color.BLACK);
+        gc.setFill(getOwner().getColor());
+        gc.fillOval(x+edgeLength/2, y+edgeLength*3/2, edgeLength/2, edgeLength/2);
+        gc.strokeOval(x+edgeLength/2, y+edgeLength*3/2, edgeLength/2, edgeLength/2);
+        gc.setFont(new Font(edgeLength/4));
+        gc.setTextAlign(TextAlignment.CENTER);
+        gc.setTextBaseline(VPos.CENTER);
+        gc.strokeText(population+"", x+edgeLength*3/4, y+edgeLength*7/4, edgeLength/4);
     }
 
     public Node getConstructionPanel() {
