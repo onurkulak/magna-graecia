@@ -183,7 +183,7 @@ public class Scener {
             settingChoices[i].setFont(Font.font("Albertus Medium", 13));
             HBox t = new HBox(settingDescriptions[i], settingChoices[i]);
             t.setMaxWidth(s.getWidth() / 4);
-            //bunu düzelt aq css mi yaparsın ne yaparsın artık
+            // @TODO bunu düzelt aq css mi yaparsın ne yaparsın artık
             t.setStyle("-fx-border-color:  #545454; -fx-background-color: #EE9900;");
             t.setAlignment(Pos.CENTER);
             root.getChildren().add(t);

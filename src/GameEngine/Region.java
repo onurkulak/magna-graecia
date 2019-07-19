@@ -8,6 +8,8 @@ package GameEngine;
 import java.util.Random;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Shape;
 /**
  *
  * @author onur
@@ -57,6 +59,7 @@ public class Region extends Terra{
         this.appearsInSmallMap = appearsInSmallMap;
     }
 
+    @Override
     public boolean doesAppearInSmallMap() {
         return appearsInSmallMap;
     }
@@ -66,6 +69,9 @@ public class Region extends Terra{
         super.draw(gc, x, y, edgeLength, displaySettings);
         if(displaySettings[2] && appearsInSmallMap) {
             drawLargeSmallMapCorrespondence(gc, x, y, edgeLength);
+        }
+        if(displaySettings[1] && getOwner() != null){
+            drawFactionBorders(gc, x, y, edgeLength);
         }
     }
     
@@ -81,5 +87,32 @@ public class Region extends Terra{
 
     public void setSmallMapCity(City smallMapCity) {
         this.smallMapCity = smallMapCity;
+    }
+
+    private void drawFactionBorders(GraphicsContext gc, int x, int y, int edgeLength) {
+        // 0.75 * current alpha
+        Color colorWithReducedAlpha = getOwner().getColor().deriveColor(0, 1, 1, 0.75);
+        // 0.53 and 0.85 are for calculating the inner hex distance, cos and sine of 58 degree
+        int strokeWidth = 3;
+        double xPoints[] = new double[]{
+            x+edgeLength/2+0.53*strokeWidth,
+            x+edgeLength*3/2-0.53*strokeWidth,
+            x+edgeLength*2-strokeWidth,
+            x+edgeLength*3/2-0.53*strokeWidth,
+            x+edgeLength/2+0.53*strokeWidth,
+            x+strokeWidth
+        };
+        double yPoints[] = new double[]{
+            y+strokeWidth*0.85,
+            y+strokeWidth*0.85,
+            y+edgeLength,
+            y+edgeLength*2-strokeWidth*0.85,
+            y+edgeLength*2-strokeWidth*0.85,
+            y+edgeLength
+        };
+        
+        gc.setLineWidth(strokeWidth*2);
+        gc.setStroke(colorWithReducedAlpha);
+        gc.strokePolygon(xPoints, yPoints, 6);
     }
 }
