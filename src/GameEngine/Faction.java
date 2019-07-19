@@ -198,7 +198,9 @@ public class Faction {
 
     public Faction(Culture culture) {
         this.culture = culture;
-        color = availableFactionColors.remove((int)(Math.random()*availableFactionColors.size()));
+        if(culture.isMaritime())
+            color = availableFactionColors.remove((int)(Math.random()*availableFactionColors.size()));
+        else color = culture.getAssociatedColor();
     }
 
     // will be cahnged later
