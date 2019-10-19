@@ -51,4 +51,31 @@ public class GM {
             return null;
         }
     }
+    
+    public static int truncate(int var, int bound1, int bound2){
+        boolean d1 = bound1 > var;
+        boolean d2 = bound2 > var;
+        // var is too small, it gets the msaller number
+        if(d1 && d2) {
+            return bound1 > bound2 ? bound2 : bound1;
+        }
+        else if(!(d1||d2)){
+            return bound1 > bound2 ? bound1 : bound2;
+        }
+        else return var;
+    }
+    
+    public static double truncate(double var, double bound1, double bound2){
+        boolean d1 = bound1 > var;
+        boolean d2 = bound2 > var;
+        // var is too small, it gets the smaller number
+        if(d1 && d2) {
+            return bound1 > bound2 ? bound2 : bound1;
+        }
+        // var is too large, it gets the larger one
+        else if(!(d1||d2)){
+            return bound1 > bound2 ? bound1 : bound2;
+        }
+        else return var;
+    }
 }
