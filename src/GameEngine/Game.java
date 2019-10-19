@@ -30,21 +30,26 @@ public class Game {
     private Unit[] allUnits;
     private Building[] buildings;
     private String[] regionNames, provinceNames;
-    private Random seed;
-    private int smallLargeProportion, largeMapEdge, cityCountInSmallMap;
+    public static Random SEED;
+    // this is effectively final, since it stays same through a game run
+    // and I have to make it -like- singleton to make accessible
+    public static int MAP_RATIO;
+    private int largeMapEdge, cityCountInSmallMap;
+    private boolean turnOrder;
 
     // p.x is col, p.y is row
     private Point cornerLargeMapCoords;
 
     public Game(Settings gameSetup) throws FileNotFoundException {
-        smallLargeProportion = 2 * (1 + gameSetup.getSmallMapSize());
+        MAP_RATIO = 2 * (1 + gameSetup.getSmallMapSize());
         setup = gameSetup;
-        seed = new Random();
+        SEED = new Random();
         resources = new Resources();
         readNames();
         cornerLargeMapCoords = new Point();
         initializeMap();
         initializeFactions();
+        turnOrder = true;
     }
 
     private void initializeMap() {
@@ -70,13 +75,13 @@ public class Game {
 
         largeMapEdge = getEdgeLengthFromCityCount(cityCountInSmallMap);
 
-        int smallMapEdge = largeMapEdge * smallLargeProportion;
+        int smallMapEdge = largeMapEdge * MAP_RATIO;
         //assuming every hex on strategy map corresponds to 4*4 hexes on small map
         smallMap = new Province[smallMapEdge][smallMapEdge];
 
         //these two lines are for random generation of names
         //even if they are not explicitly created in this class
-        Province.setPrivateSeed(seed);
+        Province.setPrivateSeed(SEED);
         Province.setProvinceNamesList(provinceNames);
 
         createSmallMapBorderTerrains(smallMapEdge, cornerLargeMapCoords, largeMapEdge);
@@ -92,11 +97,11 @@ public class Game {
             for (int j = 0; j < smallMap[0].length; j++) {
                 if (smallMap[i][j] == null) {
                     smallMap[i][j] = new Province(Terra.getNeighbours(j, i, smallMap),
-                            largeMap[i / smallLargeProportion + p.y][j / smallLargeProportion + p.x],
+                            largeMap[i / MAP_RATIO + p.y][j / MAP_RATIO + p.x],
                             getProvinceRegionTerrainSimilarity(), getProvinceRegionResourceSimilarity(),
                             getProvinceTerrainNeighbourhoodSimilarity(), getProvinceNeighbourhoodResourceSimilarity(),
-                            (i / smallLargeProportion + p.y + .0) / largeMapEdge, seed,
-                            provinceNames[seed.nextInt(provinceNames.length)], resources,
+                            (i / MAP_RATIO + p.y + .0) / largeMapEdge, SEED,
+                            provinceNames[SEED.nextInt(provinceNames.length)], resources,
                             j, i);
                 }
                 //System.out.print(smallMap[i][j].getTerrain()+ "\t");
@@ -123,32 +128,32 @@ public class Game {
 
     private void createSmallMapBorderTerrains(int smallMapSize, Point p, int largeMapEdge) {
         for (int i = 1; i < smallMapSize - 1; i++) {
-            int largeMapX = i / smallLargeProportion + p.x;
-            if (i % smallLargeProportion < smallLargeProportion / 4) {
-                smallMap[0][i] = new Province(Terra.getNeighbours(largeMapX, p.y, largeMap)[5], seed, resources, 0, i);
+            int largeMapX = i / MAP_RATIO + p.x;
+            if (i % MAP_RATIO < MAP_RATIO / 4) {
+                smallMap[0][i] = new Province(Terra.getNeighbours(largeMapX, p.y, largeMap)[5], SEED, resources, 0, i);
                 smallMap[smallMapSize - 1][i]
-                        = new Province(Terra.getNeighbours(largeMapX, p.y + largeMapEdge - 1, largeMap)[4], seed, resources, smallMapSize - 1, i);
-            } else if (i % smallLargeProportion >= smallLargeProportion * 3 / 4) {
-                smallMap[0][i] = new Province(Terra.getNeighbours(largeMapX, p.y, largeMap)[1], seed, resources, 0, i);
+                        = new Province(Terra.getNeighbours(largeMapX, p.y + largeMapEdge - 1, largeMap)[4], SEED, resources, smallMapSize - 1, i);
+            } else if (i % MAP_RATIO >= MAP_RATIO * 3 / 4) {
+                smallMap[0][i] = new Province(Terra.getNeighbours(largeMapX, p.y, largeMap)[1], SEED, resources, 0, i);
                 smallMap[smallMapSize - 1][i]
-                        = new Province(Terra.getNeighbours(largeMapX, p.y + largeMapEdge - 1, largeMap)[2], seed, resources, smallMapSize - 1, i);
+                        = new Province(Terra.getNeighbours(largeMapX, p.y + largeMapEdge - 1, largeMap)[2], SEED, resources, smallMapSize - 1, i);
             } else {
-                smallMap[0][i] = new Province(Terra.getNeighbours(largeMapX, p.y, largeMap)[0], seed, resources, 0, i);
+                smallMap[0][i] = new Province(Terra.getNeighbours(largeMapX, p.y, largeMap)[0], SEED, resources, 0, i);
                 smallMap[smallMapSize - 1][i]
-                        = new Province(Terra.getNeighbours(largeMapX, p.y + largeMapEdge - 1, largeMap)[3], seed, resources, smallMapSize - 1, i);
+                        = new Province(Terra.getNeighbours(largeMapX, p.y + largeMapEdge - 1, largeMap)[3], SEED, resources, smallMapSize - 1, i);
             }
         }
 
         for (int i = 0; i < smallMapSize; i++) {
-            int largeMapY = i / smallLargeProportion + p.y;
-            if (i % smallLargeProportion < smallLargeProportion / 2) {
-                smallMap[i][0] = new Province(Terra.getNeighbours(p.x, largeMapY, largeMap)[5], seed, resources, i, 0);
+            int largeMapY = i / MAP_RATIO + p.y;
+            if (i % MAP_RATIO < MAP_RATIO / 2) {
+                smallMap[i][0] = new Province(Terra.getNeighbours(p.x, largeMapY, largeMap)[5], SEED, resources, i, 0);
                 smallMap[i][smallMapSize - 1]
-                        = new Province(Terra.getNeighbours(p.x + largeMapEdge - 1, largeMapY, largeMap)[1], seed, resources, i, smallMapSize - 1);
+                        = new Province(Terra.getNeighbours(p.x + largeMapEdge - 1, largeMapY, largeMap)[1], SEED, resources, i, smallMapSize - 1);
             } else {
-                smallMap[i][0] = new Province(Terra.getNeighbours(p.x, largeMapY, largeMap)[4], seed, resources, i, 0);
+                smallMap[i][0] = new Province(Terra.getNeighbours(p.x, largeMapY, largeMap)[4], SEED, resources, i, 0);
                 smallMap[i][smallMapSize - 1]
-                        = new Province(Terra.getNeighbours(p.x + largeMapEdge - 1, largeMapY, largeMap)[2], seed, resources, i, smallMapSize - 1);
+                        = new Province(Terra.getNeighbours(p.x + largeMapEdge - 1, largeMapY, largeMap)[2], SEED, resources, i, smallMapSize - 1);
             }
         }
     }
@@ -158,8 +163,8 @@ public class Game {
             for (int j = 0; j < largeMapEdge; j++) {
                 largeMap[i + p.y][j + p.x].setAppearsInSmallMap(true);
                 if (isLand(largeMap[i + p.y][j + p.x])) {
-                    int cityY = (int) Math.round((smallLargeProportion) * (i + 0.5) + (seed.nextGaussian() * (smallLargeProportion - 4) / 2));
-                    int cityX = (int) Math.round((smallLargeProportion) * (j + 0.5) + (seed.nextGaussian() * (smallLargeProportion - 4) / 2));
+                    int cityY = (int) Math.round((MAP_RATIO) * (i + 0.5) + (SEED.nextGaussian() * (MAP_RATIO - 4) / 2));
+                    int cityX = (int) Math.round((MAP_RATIO) * (j + 0.5) + (SEED.nextGaussian() * (MAP_RATIO - 4) / 2));
 
                     if (cityY < 2) {
                         cityY = 2;
@@ -177,7 +182,7 @@ public class Game {
                     City c = new City(largeMap[i + p.y][j + p.x], cityX, cityY);
                     smallMap[cityY][cityX] = c;
                     c.setName(largeMap[i + p.y][j + p.x].getName());
-                    int largeMapMirror = seed.nextInt(6);
+                    int largeMapMirror = SEED.nextInt(6);
                     Point p1 = Terra.getNeighbourArrayIndeces(cityY, cityX, smallMap)[largeMapMirror];
                     while (smallMap[p1.x][p1.y] != null) {
                         p1 = Terra.getNeighbourArrayIndeces(cityY, cityX, smallMap)[(largeMapMirror++) % 6];
@@ -207,8 +212,8 @@ public class Game {
                     }
                     //the resource represented in the large map and the port-sea is always present in the smaller map
                 } else { //create small sea groups corresponding to larger map for small map
-                    int seaY = (int) Math.round((smallLargeProportion) * (i + 0.5) + (seed.nextGaussian() * (smallLargeProportion - 4) / 2));
-                    int seaX = (int) Math.round((smallLargeProportion) * (j + 0.5) + (seed.nextGaussian() * (smallLargeProportion - 4) / 2));
+                    int seaY = (int) Math.round((MAP_RATIO) * (i + 0.5) + (SEED.nextGaussian() * (MAP_RATIO - 4) / 2));
+                    int seaX = (int) Math.round((MAP_RATIO) * (j + 0.5) + (SEED.nextGaussian() * (MAP_RATIO - 4) / 2));
                     if (seaY < 2) {
                         seaY = 2;
                     }
@@ -223,10 +228,10 @@ public class Game {
                     }
                     smallMap[seaY][seaX] = new Province(Terra.TerrainType.SEA, null, 0, seaY, seaX, null, largeMap[i + p.y][j + p.x].getPseudoAltitude());
 
-                    Point p1 = Terra.getNeighbourArrayIndeces(seaY, seaX, smallMap)[seed.nextInt(6)];
-                    Point p2 = Terra.getNeighbourArrayIndeces(seaY, seaX, smallMap)[seed.nextInt(6)];
+                    Point p1 = Terra.getNeighbourArrayIndeces(seaY, seaX, smallMap)[SEED.nextInt(6)];
+                    Point p2 = Terra.getNeighbourArrayIndeces(seaY, seaX, smallMap)[SEED.nextInt(6)];
                     while (p2.equals(p1)) {
-                        p2 = Terra.getNeighbourArrayIndeces(seaY, seaX, smallMap)[seed.nextInt(6)];
+                        p2 = Terra.getNeighbourArrayIndeces(seaY, seaX, smallMap)[SEED.nextInt(6)];
                     }
                     smallMap[p1.x][p1.y] = new Province(Terra.TerrainType.SEA, null, 0, p1.x, p1.y, null, largeMap[i + p.y][j + p.x].getPseudoAltitude());
                     smallMap[p2.x][p2.y] = new Province(Terra.TerrainType.SEA, null, 0, p2.x, p2.y, null, largeMap[i + p.y][j + p.x].getPseudoAltitude());
@@ -239,8 +244,8 @@ public class Game {
         // create a mediterranean look by adding a huge water area
         int arbitrarySeaRootsCount = 5;
         for (int i = -1; i < arbitrarySeaRootsCount;) {
-            int seaY = seed.nextInt(largeMap.length);
-            int seaX = seed.nextInt(largeMap[0].length);
+            int seaY = SEED.nextInt(largeMap.length);
+            int seaX = SEED.nextInt(largeMap[0].length);
             if (largeMap[seaY][seaX] == null) {
                 largeMap[seaY][seaX] = new Region(seaX, seaY);
                 i++;
@@ -266,9 +271,9 @@ public class Game {
             for (int j = 0; j < largeMap[0].length; j++) {
                 if (largeMap[i][j] == null) {
                     largeMap[i][j] = new Region(
-                            regionNames[seed.nextInt(regionNames.length)],
+                            regionNames[SEED.nextInt(regionNames.length)],
                             (double) i / largeMap.length, Terra.getNeighbours(j, i, largeMap), Terra.TerrainType.PLAIN,
-                            getTerrainSimilarityCoefficient(setup), getResourceSimilarityCoefficient(), seed, resources, j, i);
+                            getTerrainSimilarityCoefficient(setup), getResourceSimilarityCoefficient(), SEED, resources, j, i);
                 }
                 //System.out.print(largeMap[i][j].getTerrain()+ "\t");
             }
@@ -319,7 +324,7 @@ public class Game {
         if (possibleLocs.isEmpty()) {
             return findSmallerMapArea(mapSize + 1, p);
         } else {
-            Point temp = possibleLocs.get(seed.nextInt(possibleLocs.size()));
+            Point temp = possibleLocs.get(SEED.nextInt(possibleLocs.size()));
             p.x = temp.x;
             p.y = temp.y;
             return mapSize;
@@ -476,7 +481,7 @@ public class Game {
         for (int row = -1; row <= map.length; row++) {
             for (int col = -1; col <= map[0].length; col++) {
                 Terra t = GM.getMatrix(map, row, col);
-                if (t == null && getRiverChanceForAltitude(getAverageNeighbourAltitude(row, col, map) + seed.nextDouble())) {
+                if (t == null && getRiverChanceForAltitude(getAverageNeighbourAltitude(row, col, map) + SEED.nextDouble())) {
                     startRiver(map, row, col);
                 } else if (t == null); else if (t.isLake(map)) {
                     startRiver(map, row, col);
@@ -489,7 +494,7 @@ public class Game {
 
     //neeeds to be tuned well
     private boolean getRiverChanceForAltitude(double alt) {
-        return alt - 0.55 > seed.nextDouble();
+        return alt - 0.55 > SEED.nextDouble();
     }
 
     private void startRiver(Terra[][] map, int row, int col) {
@@ -497,7 +502,7 @@ public class Game {
         double sourceAltitude;
         Terra t = GM.getMatrix(map, row, col);
         if (t == null) {
-            sourceAltitude = getAverageNeighbourAltitude(row, col, map) + seed.nextDouble() - 0.8;
+            sourceAltitude = getAverageNeighbourAltitude(row, col, map) + SEED.nextDouble() - 0.8;
         } else {
             sourceAltitude = t.getPseudoAltitude();
         }
@@ -536,7 +541,7 @@ public class Game {
             }
 
             for (int i = 0; i < slopes.length; i++) {
-                if (slopes[i] <= minSlope * (1 + seed.nextGaussian())) {
+                if (slopes[i] <= minSlope * (1 + SEED.nextGaussian())) {
                     continueRiver(row, col, map, directionIndices[i]);
                 }
             }
@@ -584,12 +589,12 @@ public class Game {
             } else if (ralt >= dalt && lalt >= dalt) {
                 if (ralt > lalt) {
                     riverCourse = continueRiver(rightNb.coord.row, rightNb.coord.col, map, (directionIndex + 5) % 6);
-                    if ((lalt - dalt) / (ralt - dalt) > seed.nextDouble()) {
+                    if ((lalt - dalt) / (ralt - dalt) > SEED.nextDouble()) {
                         riverCourse += continueRiver(leftNb.coord.row, leftNb.coord.col, map, (directionIndex + 1) % 6);
                     }
                 } else {
                     riverCourse = continueRiver(leftNb.coord.row, leftNb.coord.col, map, (directionIndex + 1) % 6);
-                    if ((ralt - dalt) / (lalt - dalt) > seed.nextDouble()) {
+                    if ((ralt - dalt) / (lalt - dalt) > SEED.nextDouble()) {
                         riverCourse += continueRiver(rightNb.coord.row, rightNb.coord.col, map, (directionIndex + 5) % 6);
                     }
                 }
@@ -619,22 +624,22 @@ public class Game {
         for (int row = cornerLargeMapCoords.y; row < cornerLargeMapCoords.y + largeMapEdge; row++) {
             for (int col = cornerLargeMapCoords.x; col < cornerLargeMapCoords.x + largeMapEdge; col++) {
                 if (largeMap[row][col].getRivers()[0]) {
-                    riverAttempt(smallMap, (row - cornerLargeMapCoords.y) * smallLargeProportion + 1, (int) ((col - cornerLargeMapCoords.x + 0.50) * smallLargeProportion) / 2 * 2, 0, smallLargeProportion / 2);
+                    riverAttempt(smallMap, (row - cornerLargeMapCoords.y) * MAP_RATIO + 1, (int) ((col - cornerLargeMapCoords.x + 0.50) * MAP_RATIO) / 2 * 2, 0, MAP_RATIO / 2);
                 }
                 if (largeMap[row][col].getRivers()[1]) {
-                    riverAttempt(smallMap, (int) ((row - cornerLargeMapCoords.y + 0.25) * smallLargeProportion), ((col - cornerLargeMapCoords.x + 1) * smallLargeProportion) - 1, 1, smallLargeProportion / 4);
+                    riverAttempt(smallMap, (int) ((row - cornerLargeMapCoords.y + 0.25) * MAP_RATIO), ((col - cornerLargeMapCoords.x + 1) * MAP_RATIO) - 1, 1, MAP_RATIO / 4);
                 }
                 if (largeMap[row][col].getRivers()[5]) {
-                    riverAttempt(smallMap, (int) ((row - cornerLargeMapCoords.y + 0.25) * smallLargeProportion), ((col - cornerLargeMapCoords.x) * smallLargeProportion) + 1, 5, smallLargeProportion / 4);
+                    riverAttempt(smallMap, (int) ((row - cornerLargeMapCoords.y + 0.25) * MAP_RATIO), ((col - cornerLargeMapCoords.x) * MAP_RATIO) + 1, 5, MAP_RATIO / 4);
                 }
                 if (largeMap[row][col].getRivers()[3]) {
-                    riverAttempt(smallMap, (row - cornerLargeMapCoords.y + 1) * smallLargeProportion - 1, (int) ((col - cornerLargeMapCoords.x + 0.50) * smallLargeProportion) / 2 * 2, 3, smallLargeProportion / 2);
+                    riverAttempt(smallMap, (row - cornerLargeMapCoords.y + 1) * MAP_RATIO - 1, (int) ((col - cornerLargeMapCoords.x + 0.50) * MAP_RATIO) / 2 * 2, 3, MAP_RATIO / 2);
                 }
                 if (largeMap[row][col].getRivers()[2]) {
-                    riverAttempt(smallMap, (int) ((row - cornerLargeMapCoords.y + 0.75) * smallLargeProportion), ((col - cornerLargeMapCoords.x + 1) * smallLargeProportion) - 1, 2, smallLargeProportion / 4);
+                    riverAttempt(smallMap, (int) ((row - cornerLargeMapCoords.y + 0.75) * MAP_RATIO), ((col - cornerLargeMapCoords.x + 1) * MAP_RATIO) - 1, 2, MAP_RATIO / 4);
                 }
                 if (largeMap[row][col].getRivers()[4]) {
-                    riverAttempt(smallMap, (int) ((row - cornerLargeMapCoords.y + 0.75) * smallLargeProportion), ((col - cornerLargeMapCoords.x) * smallLargeProportion) + 1, 4, smallLargeProportion / 4);
+                    riverAttempt(smallMap, (int) ((row - cornerLargeMapCoords.y + 0.75) * MAP_RATIO), ((col - cornerLargeMapCoords.x) * MAP_RATIO) + 1, 4, MAP_RATIO / 4);
                 }
             }
         }
@@ -645,22 +650,22 @@ public class Game {
             for (int col = cornerLargeMapCoords.x; col < cornerLargeMapCoords.x + largeMapEdge; col++) {
                 Terra[] nb = Terra.getNeighbours(col, row, largeMap);
                 if (nb[0] != null && nb[0].getRivers()[2] && !nb[0].doesAppearInSmallMap() && nb[1] != null && !nb[1].doesAppearInSmallMap()) {
-                    riverAttempt(smallMap, 0, (int) ((col - cornerLargeMapCoords.x + 0.75) * smallLargeProportion) / 2 * 2, 2, 0);
+                    riverAttempt(smallMap, 0, (int) ((col - cornerLargeMapCoords.x + 0.75) * MAP_RATIO) / 2 * 2, 2, 0);
                 }
                 if (nb[1] != null && nb[1].getRivers()[3] && !nb[1].doesAppearInSmallMap() && nb[2] != null && !nb[2].doesAppearInSmallMap()) {
-                    riverAttempt(smallMap, (row - cornerLargeMapCoords.y) / 2 + smallLargeProportion / 2, smallMap[0].length - 1, 3, 0);
+                    riverAttempt(smallMap, (row - cornerLargeMapCoords.y) / 2 + MAP_RATIO / 2, smallMap[0].length - 1, 3, 0);
                 }
                 if (nb[2] != null && nb[2].getRivers()[4] && !nb[2].doesAppearInSmallMap() && nb[3] != null && !nb[3].doesAppearInSmallMap()) {
-                    riverAttempt(smallMap, smallMap.length - 1, (int) ((col - cornerLargeMapCoords.x + 0.75) * smallLargeProportion) / 2 * 2 + 1, 4, 0);
+                    riverAttempt(smallMap, smallMap.length - 1, (int) ((col - cornerLargeMapCoords.x + 0.75) * MAP_RATIO) / 2 * 2 + 1, 4, 0);
                 }
                 if (nb[3] != null && nb[3].getRivers()[5] && !nb[3].doesAppearInSmallMap() && nb[4] != null && !nb[4].doesAppearInSmallMap()) {
-                    riverAttempt(smallMap, smallMap.length - 1, (int) ((col - cornerLargeMapCoords.x + 0.25) * smallLargeProportion) / 2 * 2, 5, 0);
+                    riverAttempt(smallMap, smallMap.length - 1, (int) ((col - cornerLargeMapCoords.x + 0.25) * MAP_RATIO) / 2 * 2, 5, 0);
                 }
                 if (nb[4] != null && nb[4].getRivers()[0] && !nb[4].doesAppearInSmallMap() && nb[5] != null && !nb[5].doesAppearInSmallMap()) {
-                    riverAttempt(smallMap, (row - cornerLargeMapCoords.y) / 2 + smallLargeProportion / 2, 0, 0, 0);
+                    riverAttempt(smallMap, (row - cornerLargeMapCoords.y) / 2 + MAP_RATIO / 2, 0, 0, 0);
                 }
                 if (nb[5] != null && nb[5].getRivers()[1] && !nb[5].doesAppearInSmallMap() && nb[0] != null && !nb[0].doesAppearInSmallMap()) {
-                    riverAttempt(smallMap, 0, (int) ((col - cornerLargeMapCoords.x + 0.25) * smallLargeProportion) / 2 * 2 + 1, 1, 0);
+                    riverAttempt(smallMap, 0, (int) ((col - cornerLargeMapCoords.x + 0.25) * MAP_RATIO) / 2 * 2 + 1, 1, 0);
                 }
             }
         }
@@ -718,7 +723,7 @@ public class Game {
     private void initializeFactions() {
         ArrayList<Culture> landCultures = Culture.getImperialCultures();
         ArrayList<Culture> seaCultures = Culture.getMaritimeCultures();
-        player = new Faction(seaCultures.get(seed.nextInt(seaCultures.size())));
+        player = new Faction(seaCultures.get(SEED.nextInt(seaCultures.size())));
         ArrayList<City> cities = new ArrayList<>();
         for (int i = 0; i < largeMapEdge; i++) {
             for (int j = 0; j < largeMapEdge; j++) {
@@ -727,20 +732,18 @@ public class Game {
                 }
             }
         }
-        System.out.println(cities.size());
+        
         // large nations that also exist in small map are created
         for (int i = 0; i < setup.getNumberOfSuperPowers(); i++) {
-            Culture cult = landCultures.remove(seed.nextInt(landCultures.size()));
+            Culture cult = landCultures.remove(SEED.nextInt(landCultures.size()));
             AIFaction faction = new AIFaction(cult);
-            City foothold = cities.remove(seed.nextInt(cities.size()));
+            City foothold = cities.remove(SEED.nextInt(cities.size()));
             foothold.setOwner(faction);
             Region mainRegion = foothold.getRegionEquivalent();
             mainRegion.setOwner(faction);
-            System.out.println(foothold.coord.getIndexPoint());
-            System.out.println(mainRegion.coord.getIndexPoint());
 
             // other than the city in magna graecia
-            int initialRegionCount = seed.nextInt(5) + 1;
+            int initialRegionCount = SEED.nextInt(5) + 1;
             System.out.println("Created superpower " + cult.getCountryName() + " with " + (initialRegionCount + 1) + " regions");
             for (int j = 0; j < initialRegionCount; j++) {
                 Point closestMainLand
@@ -753,19 +756,18 @@ public class Game {
                                 }, largeMap, mainRegion.coord.getIndexPoint()).get(0);
                 mainRegion = largeMap[closestMainLand.y][closestMainLand.x];
                 GM.swapPoint(closestMainLand);
-                System.out.println(foothold.coord.getPoint());
                 mainRegion.setOwner(faction);
             }
         }
 
         // player faction is created, but first initialize the player..
-        City playerCity = cities.remove(seed.nextInt(cities.size()));
+        City playerCity = cities.remove(SEED.nextInt(cities.size()));
         playerCity.setOwner(player);
         playerCity.getRegionEquivalent().setOwner(player);
 
         // city states are created
         for (City c : cities) {
-            Culture cult = seaCultures.get(seed.nextInt(seaCultures.size()));
+            Culture cult = seaCultures.get(SEED.nextInt(seaCultures.size()));
             AIFaction faction = new AIFaction(cult);
             c.setOwner(faction);
             c.getRegionEquivalent().setOwner(faction);
@@ -773,10 +775,10 @@ public class Game {
 
         for (int i = 0; i < setup.getNumberOfForeignPowers(); i++) {
             // a city state civ is created
-            if (seed.nextInt(landCultures.size() + seaCultures.size()) < seaCultures.size()) {
-                Culture cult = seaCultures.get(seed.nextInt(seaCultures.size()));
+            if (SEED.nextInt(landCultures.size() + seaCultures.size()) < seaCultures.size()) {
+                Culture cult = seaCultures.get(SEED.nextInt(seaCultures.size()));
                 AIFaction faction = new AIFaction(cult);
-                Point randomCity = new Point(seed.nextInt(largeMap.length), seed.nextInt(largeMap[0].length));
+                Point randomCity = new Point(SEED.nextInt(largeMap.length), SEED.nextInt(largeMap[0].length));
                 randomCity
                             = Terra.randomBreadthFirstSearchWithObstacles(
                                     (Terra t) -> {
@@ -792,12 +794,12 @@ public class Game {
                     System.out.println("Created city-state in " + randomCity);
             
             } else {
-                Culture cult = landCultures.remove(seed.nextInt(landCultures.size()));
+                Culture cult = landCultures.remove(SEED.nextInt(landCultures.size()));
                 AIFaction faction = new AIFaction(cult);
 
-                Point closestMainLand = new Point(seed.nextInt(largeMap.length), seed.nextInt(largeMap[0].length));
+                Point closestMainLand = new Point(SEED.nextInt(largeMap.length), SEED.nextInt(largeMap[0].length));
 
-                int initialRegionCount = seed.nextInt(5) + 2;
+                int initialRegionCount = SEED.nextInt(5) + 2;
                 System.out.println("Created superpower " + cult.getCountryName() + " with " + (initialRegionCount) + " regions");
             
                 for (int j = 0; j < initialRegionCount; j++) {
@@ -811,7 +813,6 @@ public class Game {
                                     }, largeMap, closestMainLand).get(0);
                     Region mainRegion = largeMap[closestMainLand.y][closestMainLand.x];
                     GM.swapPoint(closestMainLand);
-                    System.out.println(closestMainLand);
                     mainRegion.setOwner(faction);
                 }
             }
