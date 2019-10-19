@@ -819,4 +819,14 @@ public class Game {
         }
     }
 
+    private void endTurn() {
+        turnOrder = false;
+        player.endTurn();
+        for(int i = 0; i < rivalFactions.length; i++){
+            rivalFactions[i].playTurn();
+            rivalFactions[i].endTurn();
+        }
+        turnOrder = true;
+    }
+
 }

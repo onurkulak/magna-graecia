@@ -8,6 +8,7 @@ package GameEngine;
 import javafx.scene.paint.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
+import magna.graecia.AvailableColorsJavaFX;
 
 /**
  *
@@ -19,11 +20,12 @@ public class Faction {
     private String name;
     private final Color color;
     private ArrayList<Province> provinces;
+    private ArrayList<City> cities;
     private ArrayList<Region> regions;
     private Civic civicChoices;
     private ArrayList<TradeOffer> availableTradeOffers;
-    private ArrayList<Shipment> ongoingShipments;
-    private int[] resourceAmounts;
+    private ArrayList<Shipment> shipments;
+    private final int[] resourceAmounts;
     private ArrayList<Force> forces;
     private ArrayList<Army> availableMercenaries;
     private ArrayList<Strategos> availableGenerals;
@@ -35,6 +37,18 @@ public class Faction {
     private diceElement[] Dice;
     private ArrayList<Building> availableBuildings; //can be switched with bitmaps
     private ArrayList<Unit> availableUnits;
+
+    public void endTurn() {
+        for(Shipment s: shipments)
+            s.moveShipment();
+        for(City c: getCities())
+            c.produce();
+        
+        // small map is already considered with the city method
+        for(Region r: getRegions())
+            if(!r.doesAppearInSmallMap())
+                r.produce();
+    }
 
     public enum Stance {
 
@@ -80,8 +94,8 @@ public class Faction {
         return availableTradeOffers;
     }
 
-    public ArrayList<Shipment> getOngoingShipments() {
-        return ongoingShipments;
+    public ArrayList<Shipment> getShipments() {
+        return shipments;
     }
 
     public int[] getResourceAmounts() {

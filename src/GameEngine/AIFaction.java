@@ -5,6 +5,7 @@
  */
 package GameEngine;
 
+import java.util.ArrayList;
 /**
  *
  * @author onur
@@ -12,8 +13,21 @@ package GameEngine;
 public class AIFaction extends Faction{
     private Civic favoriteCivics;
     private int[] attitudes;
+    public int pseudoPopulation;
 
     public AIFaction(Culture culture) {
         super(culture);
+    }
+
+    public void playTurn() {
+    }
+    
+    public int getRegionCountWithoutProvinces(){
+        ArrayList<Region> regions = getRegions();
+        int cnt = regions.size();
+        for(Region r: regions)
+            if(r.doesAppearInSmallMap())
+                --cnt;
+        return cnt;
     }
 }
