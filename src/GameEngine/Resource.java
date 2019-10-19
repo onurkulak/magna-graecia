@@ -23,9 +23,11 @@ class Resource {
     public enum ResourceTypes{MATERIAL, EDIBLE, SLAVE, LUXURY};
     private final ResourceTypes type;
     private double baseTradeValue;
+    private int id;
     private ProductionBuilding associatedBuilding;
 
-    public Resource(String name, double baseTradeValue, ResourceTypes r) {
+    public Resource(String name, double baseTradeValue, ResourceTypes r, int id) {
+        this.id = id;
         this.name = name;
         this.baseTradeValue = baseTradeValue;
         type = r;
@@ -45,6 +47,14 @@ class Resource {
 
     public double getBaseTradeValue() {
         return baseTradeValue;
+    }
+
+    public ResourceTypes getType() {
+        return type;
+    }
+
+    public int getId() {
+        return id;
     }
 
     public ProductionBuilding getAssociatedBuilding() {

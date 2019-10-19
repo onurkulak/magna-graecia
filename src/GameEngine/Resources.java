@@ -17,30 +17,32 @@ class Resources {
             iron, copper, marble,
             timber, olive,
             fish, pot, glass, slave;
+    
+    public final static int resourceCount = 16;
 
     public Resources() {
-        wheat = new Resource("wheat", 1, Resource.ResourceTypes.EDIBLE);
-        clay = new Resource("clay", 1, Resource.ResourceTypes.MATERIAL);
+        wheat = new Resource("wheat", 1, Resource.ResourceTypes.EDIBLE, 0);
+        clay = new Resource("clay", 1, Resource.ResourceTypes.MATERIAL, 1);
 
-        wine = new Resource("wine", 2, Resource.ResourceTypes.EDIBLE);
-        flax = new Resource("flax", 2, Resource.ResourceTypes.LUXURY);
-        livestock = new Resource("livestock", 2, Resource.ResourceTypes.EDIBLE);
+        wine = new Resource("wine", 2, Resource.ResourceTypes.EDIBLE, 2);
+        flax = new Resource("flax", 2, Resource.ResourceTypes.LUXURY, 3);
+        livestock = new Resource("livestock", 2, Resource.ResourceTypes.EDIBLE, 4);
 
-        dye = new Resource("dye", 4, Resource.ResourceTypes.LUXURY);
-        salt = new Resource("salt", 2, Resource.ResourceTypes.MATERIAL);
-        spice = new Resource("spice", 5, Resource.ResourceTypes.LUXURY);
+        dye = new Resource("dye", 4, Resource.ResourceTypes.LUXURY, 5);
+        salt = new Resource("salt", 2, Resource.ResourceTypes.MATERIAL, 6);
+        spice = new Resource("spice", 5, Resource.ResourceTypes.LUXURY, 7);
 
-        iron = new Resource("iron", 2, Resource.ResourceTypes.MATERIAL);
-        copper = new Resource("copper", 1, Resource.ResourceTypes.MATERIAL);
-        marble = new Resource("marble", 2, Resource.ResourceTypes.MATERIAL);
+        iron = new Resource("iron", 2, Resource.ResourceTypes.MATERIAL, 8);
+        copper = new Resource("copper", 1, Resource.ResourceTypes.MATERIAL, 9);
+        marble = new Resource("marble", 2, Resource.ResourceTypes.MATERIAL, 10);
 
-        timber = new Resource("timber", 1, Resource.ResourceTypes.MATERIAL);
-        olive = new Resource("olive", 1, Resource.ResourceTypes.EDIBLE);
+        timber = new Resource("timber", 1, Resource.ResourceTypes.MATERIAL, 11);
+        olive = new Resource("olive", 1, Resource.ResourceTypes.EDIBLE, 12);
 
-        fish = new Resource("fish", 2, Resource.ResourceTypes.EDIBLE);
-        pot = new Resource("pot", 2, Resource.ResourceTypes.LUXURY);
-        glass = new Resource("glass", 3, Resource.ResourceTypes.LUXURY);
-        slave = new Resource("slave", 5, Resource.ResourceTypes.SLAVE);
+        fish = new Resource("fish", 2, Resource.ResourceTypes.EDIBLE, 13);
+        pot = new Resource("pot", 2, Resource.ResourceTypes.LUXURY, 14);
+        glass = new Resource("glass", 3, Resource.ResourceTypes.LUXURY, 15);
+        slave = new Resource("slave", 5, Resource.ResourceTypes.SLAVE, 16);
     }
     
     public Resource[] getDesertResources(){
