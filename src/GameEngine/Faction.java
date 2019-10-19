@@ -49,11 +49,13 @@ public class Faction {
     public Faction(Culture culture) {
         this.culture = culture;
         if(culture.isMaritime())
-            color = availableFactionColors.remove((int)(Math.random()*availableFactionColors.size()));
+            color = AvailableColorsJavaFX.availableColors.get((int)(Math.random()*
+                    AvailableColorsJavaFX.availableColors.size()));
         else color = culture.getAssociatedColor();
+        resourceAmounts = new int[Resources.resourceCount];
     }
 
-    // will be cahnged later
+    //@TODO  will be cahnged later
     public String getName() {
         return culture.getCountryName();
     }
@@ -137,4 +139,29 @@ public class Faction {
     public void setCulture(Culture culture) {
         this.culture = culture;
     }
+    
+    public void changeResource(Resource r, int amount){
+        if(r.getType() != Resource.ResourceTypes.SLAVE)
+            resourceAmounts[r.getId()]+=amount;
+        else
+            // if it has no provinces, it's an AIplayer and slaves added to its pseudo population
+            if(this.getProvinces().isEmpty()){
+                AIFaction aiFaction = (AIFaction)this;
+                aiFaction.pseudoPopulation+=amount;
+            }
+            else{
+                // slaves are sent to first capital
+                this.getProvinces().get(0).getCapital().changeSlavePopulation(amount);
+            }
+    }
+    
+    public void changeGold(int amount){
+        resourceAmounts[resourceAmounts.length-1]+=amount;
+    }
+
+    public ArrayList<City> getCities() {
+        return cities;
+    }
+    
+    
 }
