@@ -235,4 +235,16 @@ public class Province extends Terra {
     boolean doesAppearInSmallMap() {
         return false;
     }
+
+    @Override
+    public void setOwner(Faction owner) {
+        super.setOwner(owner);
+        owner.getProvinces().add(this);
+    }
+
+    @Override
+    public void freeOwner() {
+        getOwner().getProvinces().remove(this);
+        setOwner(null);
+    }
 }

@@ -57,10 +57,15 @@ public class City extends Province {
         super.setOwner(f);
         for(Province p:dominions)
             p.setOwner(f);
+        f.getCities().add(this);
     }
     
     @Override
-    public void setCapital(City c) {}
+    public void freeOwner() {
+        super.freeOwner();
+        for(Province p:dominions)
+            p.freeOwner();
+    }
 
     @Override
     public void draw(GraphicsContext gc, int x, int y, int edgeLength, boolean[] displaySettings) {

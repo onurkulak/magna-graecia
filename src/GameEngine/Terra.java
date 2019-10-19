@@ -241,8 +241,11 @@ public abstract class Terra {
     }
 
     public void setOwner(Faction owner) {
+        freeOwner();
         this.owner = owner;
     }
+    
+    public abstract void freeOwner();
 
     public Resource getResource() {
         return producedResource;

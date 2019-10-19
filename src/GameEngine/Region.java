@@ -115,4 +115,16 @@ public class Region extends Terra{
         gc.setStroke(colorWithReducedAlpha);
         gc.strokePolygon(xPoints, yPoints, 6);
     }
+    
+    @Override
+    public void setOwner(Faction owner) {
+        super.setOwner(owner);
+        owner.getRegions().add(this);
+    }
+    
+    @Override
+    public void freeOwner() {
+        getOwner().getRegions().remove(this);
+        setOwner(null);
+    }
 }
