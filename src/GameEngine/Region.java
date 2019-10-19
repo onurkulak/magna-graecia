@@ -127,4 +127,15 @@ public class Region extends Terra{
         getOwner().getRegions().remove(this);
         setOwner(null);
     }
+
+    void produce() {
+        AIFaction aif = (AIFaction) getOwner();
+        // produce stuff with some randomness, 
+        // mean pop * normal distribution with m=1 deviation 1/10
+        // map raito is used to normalize between region/province sizes
+        aif.changeResource(getResource(), (int)Math.round(aif.pseudoPopulation 
+                * (GM.truncate(Game.SEED.nextGaussian()/10+1, 0, 2)) 
+                / aif.getRegionCountWithoutProvinces()
+                * Math.pow(Game.MAP_RATIO, 2)));
+    }
 }

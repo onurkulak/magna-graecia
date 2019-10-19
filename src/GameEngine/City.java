@@ -236,6 +236,12 @@ public class City extends Province {
         }
     }
 
+    // simple implementation without any bonuses, just add the pop value
+    void produce() {
+        for(Province p : getDominions())
+            getOwner().changeResource(p.getResource(), p.getTotalPopulation());
+    }
+
     private static class CityOrder {
 
         BuildingInstance b;
