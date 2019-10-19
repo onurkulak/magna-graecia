@@ -18,14 +18,6 @@ import java.awt.Point;
  */
 public abstract class Terra {
 
-    //things are a little bit fucked up with functions below, so instead of p.x,p.y reverse is used for now
-    private static int calculateMinHeuristicDistance(Point p1, Point p2) {
-        return OffsetCoord.qoffsetToCube(new OffsetCoord(p1.y, p1.x))
-                .distance(OffsetCoord.qoffsetToCube(new OffsetCoord(p2.y, p2.x)));
-    }
-    protected static final String[] edgePostfixes = new String[]{
-        "n", "ne", "se", "s", "sw", "nw"
-    };
 
     private Faction owner;
     private String name;
@@ -38,6 +30,18 @@ public abstract class Terra {
     protected boolean isLake;
     protected boolean lakeCalculationMade;
 
+    
+    
+    //things are a little bit fucked up with functions below, so instead of p.x,p.y reverse is used for now
+    private static int calculateMinHeuristicDistance(Point p1, Point p2) {
+        return OffsetCoord.qoffsetToCube(new OffsetCoord(p1.y, p1.x))
+                .distance(OffsetCoord.qoffsetToCube(new OffsetCoord(p2.y, p2.x)));
+    }
+    protected static final String[] edgePostfixes = new String[]{
+        "n", "ne", "se", "s", "sw", "nw"
+    };
+    
+    
     public double getPseudoAltitude() {
         return pseudoAltitude;
     }
@@ -51,7 +55,7 @@ public abstract class Terra {
     };
 
     abstract boolean doesAppearInSmallMap();
-
+    
     public enum TerrainType {
 
         SEA, DESERT, PLAIN, GRASS, FOREST, HILL
