@@ -24,7 +24,7 @@ public class Province extends Terra {
 
     private City capital;
     private Force military;
-    private int population;
+    private int freePopulation, slavePopulation;
     private static String[] provinceNamesList;
     private static Random privateSeed;
 
@@ -42,7 +42,7 @@ public class Province extends Terra {
         super(col, row);
         setName(provinceNamesList[privateSeed.nextInt(provinceNamesList.length)]);
         setCapital(null);
-        setPopulation(1);
+        setFreePopulation(1);
     }
 
     public Province(TerrainType t, Resource r, int pop, int row, int col, City c, double altitude) {
@@ -50,7 +50,7 @@ public class Province extends Terra {
         super(col, row);
         setTerrain(t);
         setProducedResource(r);
-        setPopulation(pop);
+        setFreePopulation(pop);
         setPseudoAltitude(altitude);
         setCapital(c);
         setName(provinceNamesList[privateSeed.nextInt(provinceNamesList.length)]);
@@ -61,7 +61,7 @@ public class Province extends Terra {
         super(col, row);
         setTerrain(t.getTerrain());
         setProducedResource(getRandomResorceForTerrain(t.getTerrain(), seed, r));
-        setPopulation(0);
+        setFreePopulation(0);
         setCapital(null);
         setName(provinceNamesList[privateSeed.nextInt(provinceNamesList.length)]);
         if(!t.isLake)
@@ -99,7 +99,7 @@ public class Province extends Terra {
         } else {
             decideResource(neighbours, provinceNeighboursResourceSim, resources, seed);
         }
-        setPopulation(0);
+        setFreePopulation(0);
         setPseudoAltitude(r.getPseudoAltitude());
     }
 
@@ -111,18 +111,18 @@ public class Province extends Terra {
         this.military = military;
     }
 
-    public int getPopulation() {
-        return population;
+    public int getFreePopulation() {
+        return freePopulation;
     }
 
-    private void setPopulation(int population) {
+    private void setFreePopulation(int freePopulation) {
         if (TerrainType.SEA == getTerrain()) {
-            this.population = 0;
-            if (population > 0) {
+            this.freePopulation = 0;
+            if (freePopulation > 0) {
                 System.out.println("trying to set positive sea population");
             }
         } else {
-            this.population = population;
+            this.freePopulation = freePopulation;
         }
     }
 
@@ -156,10 +156,14 @@ public class Province extends Terra {
             military.drawStrategicMap(gc, x, y, edgeLength);
         }
     }
+    
+    public int getTotalPopulation(){
+        return freePopulation + slavePopulation;
+    }
 
     public void drawPopulation(GraphicsContext gc, int x, int y, int edgeLength) {
         // only draw population if it's a city or has population
-        if(population == 0 && capital != this)
+        if(getTotalPopulation() == 0 && capital != this)
             return;
         gc.setLineWidth(1);
         gc.setStroke(Color.BLACK);
@@ -169,7 +173,7 @@ public class Province extends Terra {
         gc.setFont(new Font(edgeLength/4));
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.CENTER);
-        gc.strokeText(population+"", x+edgeLength*3/4, y+edgeLength*7/4, edgeLength/4);
+        gc.strokeText(getTotalPopulation()+"", x+edgeLength*3/4, y+edgeLength*7/4, edgeLength/4);
     }
 
     public Node getConstructionPanel() {
@@ -198,7 +202,7 @@ public class Province extends Terra {
         return "Province Name:\t" + (getName() == null || getName().equals("")
                 ? "Coast" : getName())
                 + "\nPart Of:\t\t" + (getCapital() == null ? "Wilderness" : getCapital().getName())
-                + "\nPopulation:\t\t" + getPopulation() + "\n" + super.getInfo();
+                + "\nPopulation:\t\t" + getFreePopulation() + "\n" + super.getInfo();
     }
 
     public static void setProvinceNamesList(String[] provinceNamesList) {
@@ -234,6 +238,27 @@ public class Province extends Terra {
     @Override
     boolean doesAppearInSmallMap() {
         return false;
+    }
+    
+    
+    public int getSlavePopulation() {
+        return slavePopulation;
+    }
+
+    public void setSlavePopulation(int slavePopulation) {
+        this.slavePopulation = slavePopulation;
+    }
+
+    public void incrementFreePopulation(){
+        freePopulation++;
+    }
+    
+    public void decrementFreePopulation(){
+        freePopulation--;
+    }
+    
+    public void changeSlavePopulation(int amount){
+        slavePopulation+=amount;
     }
 
     @Override
